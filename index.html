@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Painel Freelancer</title>
+
+<!-- PWA: instalável na tela inicial -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D1017">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Painel Freelancer">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg: #0D1017;
+    --bg-2: #12151F;
+    --glass: rgba(255,255,255,.045);
+    --glass-hover: rgba(255,255,255,.07);
+    --border: rgba(255,255,255,.09);
+    --text: #EDEFF5;
+    --text-soft: #9CA3B5;
+    --text-faint: #666E80;
+    --accent: #7C7CF0;
+    --accent-2: #33D9AF;
+    --accent-3: #FFB648;
+    --danger: #FF6B7F;
+    --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --radius: 16px;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ height: 100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before{
+    content:"";
+    position: fixed; top: -20%; left: -10%;
+    width: 60vw; height: 60vw;
+    background: radial-gradient(circle, rgba(124,124,240,.16), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after{
+    content:"";
+    position: fixed; bottom: -25%; right: -15%;
+    width: 55vw; height: 55vw;
+    background: radial-gradient(circle, rgba(51,217,175,.12), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .app{ position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 40px 20px 70px; padding-top: max(40px, env(safe-area-inset-top)); padding-bottom: max(70px, env(safe-area-inset-bottom)); }
+
+  .top{ display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 26px; }
+  .top .eyebrow{ font-family: var(--font-mono); font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color: var(--text-faint); margin:0 0 6px; }
+  .top h1{
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    margin:0;
+    background: linear-gradient(90deg, #FFFFFF 20%, var(--accent) 65%, var(--accent-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -.3px;
+  }
+
+  .tabs{
+    display:inline-flex;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .tab{
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    cursor:pointer;
+    transition: background .2s ease, color .2s ease;
+  }
+  .tab:hover{ color: var(--text); }
+  .tab.active{ background: var(--text); color: var(--bg-2); }
+
+  .panel{ display:none; animation: fade .3s ease; }
+  .panel.active{ display:block; }
+  @media (prefers-reduced-motion: reduce){ .panel{ animation:none; } }
+  @keyframes fade{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  .section-title{ font-family: var(--font-display); font-size:16px; font-weight:600; margin: 0 0 2px; color: var(--text); }
+  .section-sub{ font-size:12.5px; color: var(--text-faint); margin:0 0 16px; }
+
+  .glass{
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* ---------- stat cards ---------- */
+  .stat-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap:12px; margin-bottom:26px; }
+  .stat-card{ padding:16px 18px; }
+  .stat-card .label{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-faint); font-weight:600; }
+  .stat-card .value{ font-family: var(--font-mono); font-size:23px; font-weight:600; margin-top:6px; color:var(--text); }
+  .stat-card.hero .value{ background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  /* ---------- heatmap ---------- */
+  .heatmap-card{ padding: 20px 22px 18px; margin-bottom: 26px; overflow-x:auto; }
+  .heatmap-scroll{ min-width: 640px; }
+  .heatmap-months{ display:grid; grid-auto-flow:column; grid-auto-columns:11px; gap:3px; font-family: var(--font-mono); font-size:9.5px; color:var(--text-faint); margin-bottom:4px; margin-left:16px; }
+  .heatmap-body{ display:flex; gap:6px; }
+  .heatmap-rowlabels{ display:grid; grid-template-rows: repeat(7, 11px); gap:3px; font-family: var(--font-mono); font-size:9px; color:var(--text-faint); text-align:right; padding-top:0; }
+  .heatmap-grid{ display:grid; grid-auto-flow:column; grid-template-rows: repeat(7, 11px); grid-auto-columns:11px; gap:3px; }
+  .hcell{ width:11px; height:11px; border-radius:3px; background: rgba(255,255,255,.05); }
+  .heatmap-legend{ display:flex; align-items:center; gap:6px; margin-top:14px; font-size:10.5px; color:var(--text-faint); font-family: var(--font-mono); }
+  .heatmap-legend .hcell{ width:10px; height:10px; }
+
+  /* ---------- two column ---------- */
+  .two-col{ display:grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 26px; }
+  @media (max-width:720px){ .two-col{ grid-template-columns:1fr; } }
+
+  .modern-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 4px; border-bottom:1px solid var(--border); font-size:13px; }
+  .modern-row:last-child{ border-bottom:none; }
+  .modern-row .name{ color: var(--text-soft); font-weight:500; }
+  .modern-row .num{ font-family: var(--font-mono); font-weight:600; color: var(--text); }
+  .mini-bar-bg{ display:inline-block; width:64px; height:5px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; margin-right:8px; vertical-align:middle; }
+  .mini-bar-fill{ height:100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .mini-bar-fill.under{ background: linear-gradient(90deg, var(--accent-3), #ffcf85); }
+  .badge{ font-family: var(--font-mono); font-size:9.5px; padding:2px 7px; border-radius:6px; margin-left:6px; }
+  .badge.ok{ background: rgba(51,217,175,.15); color: var(--accent-2); }
+  .badge.peak{ background: rgba(255,182,72,.16); color: var(--accent-3); }
+
+  /* ---------- bar chart ---------- */
+  .chart-card{ padding: 20px 20px 12px; margin-bottom: 26px; }
+  .chart{ display:flex; align-items:flex-end; gap:8px; height:140px; }
+  .chart .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .chart .bar{ width:60%; border-radius:6px 6px 2px 2px; min-height:2px; background: linear-gradient(180deg, var(--accent), var(--accent-2)); transition: height .5s ease; }
+  .chart .bar-label{ font-size:9.5px; color:var(--text-faint); margin-top:8px; font-family: var(--font-mono); }
+
+  /* ---------- forms ---------- */
+  .card{ padding: 20px 20px 18px; margin-bottom: 22px; }
+  .form-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--text-faint); font-weight:600; }
+  .field input, .field select{
+    font-family: var(--font-body);
+    font-size:14px;
+    padding:9px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.03);
+    color: var(--text);
+    min-width: 130px;
+  }
+  .field input::placeholder{ color: var(--text-faint); }
+  .field input:focus, .field select:focus, button:focus-visible{
+    outline:none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,124,240,.25);
+  }
+  button{
+    font-family: var(--font-body);
+    font-weight:600;
+    font-size:13.5px;
+    padding:10px 20px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    background: linear-gradient(90deg, var(--accent), #6a5ff0);
+    color:#fff;
+    transition: transform .1s ease, filter .15s ease;
+  }
+  button:hover{ filter: brightness(1.1); }
+  button:active{ transform: translateY(1px); }
+  button.secondary{ background: transparent; border:1px solid var(--border); color: var(--text-soft); }
+  button.secondary:hover{ background: var(--glass-hover); color: var(--text); filter:none; }
+  button.danger{ background: linear-gradient(90deg, var(--danger), #ff8b9b); padding:7px 12px; font-size:12px; }
+  button.icon-btn{ background: transparent; border:1px solid var(--border); color: var(--text-soft); padding:6px 9px; }
+  button.icon-btn:hover{ background: var(--glass-hover); color: var(--text); }
+  .row-actions{ display:flex; gap:6px; }
+
+  /* ---------- entries list ---------- */
+  .entry-list{ display:flex; flex-direction:column; }
+  .entry-row{ display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); }
+  .entry-row:last-child{ border-bottom:none; }
+  .entry-date{ font-family:var(--font-mono); font-size:13px; color:var(--text-soft); width:88px; flex-shrink:0; }
+  .entry-day{ font-size:11.5px; color:var(--text-faint); width:80px; flex-shrink:0; text-transform:capitalize; }
+  .chip{ font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; flex-shrink:0; }
+  .chip.completo{ background: rgba(124,124,240,.15); color:#B4B0FF; }
+  .chip.meio{ background: rgba(255,255,255,.07); color: var(--text-soft); }
+  .entry-value{ font-family: var(--font-mono); font-weight:700; margin-left:auto; }
+  .entry-custom-tag{ font-size:9.5px; color: var(--accent-3); margin-left:6px; }
+  .empty-state{ text-align:center; padding:40px 10px; color: var(--text-faint); font-size:13.5px; }
+
+  svg.icon{ width:14px; height:14px; }
+
+  .save-msg{ font-size:12.5px; color: var(--accent-2); font-weight:600; margin-left:6px; opacity:0; transition: opacity .3s ease; align-self:center; }
+  .save-msg.show{ opacity:1; }
+  .params-note{ font-size:12px; color: var(--text-faint); line-height:1.7; margin-top:16px; }
+
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.15); border-radius:4px; }
+
+  @media (max-width: 560px){
+    .entry-day{ display:none; }
+    .top h1{ font-size: 24px; }
+  }
+
+  /* ---------- gate screens (connect / login) ---------- */
+  .gate-wrap{ min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 24px; padding-top: max(24px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .gate-card{ width: 100%; max-width: 420px; padding: 30px 28px 26px; }
+  .gate-card h1{ font-family: var(--font-display); font-size:22px; margin:0 0 4px; }
+  .gate-card .gate-sub{ font-size:12.5px; color:var(--text-faint); margin:0 0 22px; line-height:1.6; }
+  .gate-card .field{ width:100%; margin-bottom:14px; }
+  .gate-card .field input{ width:100%; }
+  .gate-card button{ width:100%; margin-top:4px; }
+  .gate-error{ font-size:12.5px; color: var(--danger); margin-top:10px; min-height:16px; }
+  .gate-switch{ font-size:12.5px; color:var(--text-faint); margin-top:16px; text-align:center; }
+  .gate-switch a{ color: var(--accent-2); cursor:pointer; text-decoration:underline; }
+  .gate-note{ font-size:11.5px; color:var(--text-faint); margin-top:18px; line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+  .topbar-account{ display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-faint); }
+  .topbar-account button{ padding:6px 12px; font-size:11.5px; }
+  #app-shell{ display:none; }
+
+  /* ---------- period cards (mês/semana/meta/previsão) ---------- */
+  .period-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap:12px; margin-bottom:26px; }
+  .period-card{ padding:16px 18px; }
+  .period-card .label{ font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-faint); font-weight:600; margin-bottom:8px; }
+  .period-card .value{ font-family: var(--font-mono); font-size:19px; font-weight:600; color:var(--text); }
+  .period-card .sub{ font-size:11.5px; color:var(--text-faint); margin-top:4px; }
+  .progress-track{ width:100%; height:8px; background: rgba(255,255,255,.08); border-radius:999px; overflow:hidden; margin-top:10px; }
+  .progress-fill{ height:100%; border-radius:999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width:0%; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+  .progress-fill.over{ background: linear-gradient(90deg, var(--accent-2), #7CF0C2); }
+
+  /* ---------- filters ---------- */
+  .filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px; }
+  .filter-bar .field{ min-width:120px; }
+  .filter-bar .field input, .filter-bar .field select{ min-width:auto; width:100%; }
+  .filter-result{ font-size:12px; color:var(--text-faint); margin-bottom:14px; }
+  .search-box{ position:relative; margin-bottom:14px; }
+  .search-box input{ width:100%; padding-left:36px; }
+  .search-box svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--text-faint); }
+
+  /* ---------- pie chart ---------- */
+  .pie-wrap{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .pie{ width:120px; height:120px; border-radius:50%; flex-shrink:0; }
+  .pie-legend{ display:flex; flex-direction:column; gap:8px; font-size:13px; }
+  .pie-legend .dot{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:8px; }
+
+  /* ---------- line chart ---------- */
+  .line-chart-wrap{ width:100%; overflow-x:auto; }
+  .line-chart-wrap svg{ display:block; min-width:100%; }
+
+  /* ---------- calendar ---------- */
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-nav .cal-title{ font-family: var(--font-display); font-size:16px; font-weight:600; text-transform:capitalize; }
+  .cal-nav-btns{ display:flex; gap:6px; }
+  .cal-nav-btns button{ padding:6px 12px; }
+  .cal-weekdays{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; text-align:center; }
+  .cal-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
+  .cal-cell{
+    aspect-ratio: 1;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.02);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: background .15s ease, transform .1s ease;
+    position:relative;
+    padding:4px;
+  }
+  .cal-cell:hover{ background: var(--glass-hover); }
+  .cal-cell:active{ transform: scale(.96); }
+  .cal-cell.empty{ visibility:hidden; cursor:default; }
+  .cal-cell .cal-day-num{ font-size:12.5px; font-weight:600; color:var(--text-soft); }
+  .cal-cell.has-entry{ background: rgba(124,124,240,.14); border-color: rgba(124,124,240,.35); }
+  .cal-cell.has-entry .cal-day-num{ color: var(--text); }
+  .cal-cell.today{ box-shadow: 0 0 0 2px var(--accent-2) inset; }
+  .cal-cell .cal-value{ font-family: var(--font-mono); font-size:8.5px; color: var(--accent-2); margin-top:2px; }
+  .cal-cell .cal-dot{ width:5px; height:5px; border-radius:50%; background: var(--accent-3); position:absolute; top:5px; right:5px; }
+  @media (max-width:560px){ .cal-cell .cal-value{ display:none; } }
+
+  /* ---------- day modal ---------- */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background: rgba(5,6,10,.6);
+    backdrop-filter: blur(3px); z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal-box{ width:100%; max-width:420px; padding:22px 22px 20px; max-height:85vh; overflow-y:auto; }
+  .modal-box h3{ font-family: var(--font-display); font-size:17px; margin:0 0 14px; text-transform:capitalize; }
+  .modal-entry{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); gap:8px; }
+  .modal-entry:last-of-type{ border-bottom:none; }
+  .modal-close{ position:absolute; top:14px; right:14px; background:transparent; border:none; color:var(--text-faint); font-size:20px; cursor:pointer; padding:4px 8px; }
+  .modal-box{ position:relative; }
+  .modal-add-form{ margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+
+  /* ---------- stats grid ---------- */
+  .stats-mini-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; }
+  .stats-mini{ padding:12px 14px; border:1px solid var(--border); border-radius:10px; background: rgba(255,255,255,.02); }
+  .stats-mini .label{ font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-faint); font-weight:600; }
+  .stats-mini .value{ font-family: var(--font-mono); font-size:16px; font-weight:600; margin-top:4px; color:var(--text); }
+</style>
+</head>
+<body>
+<!-- ===================== TELA: CONECTAR AO SUPABASE ===================== -->
+<div class="gate-wrap" id="gate-connect">
+  <div class="glass gate-card">
+    <h1>Conectar à nuvem</h1>
+    <p class="gate-sub">Cole a URL e a chave "anon public" do seu projeto Supabase (Configurações → API). Isso é feito uma vez por navegador/aparelho.</p>
+    <div class="field"><label for="cfg-url">Project URL</label><input type="text" id="cfg-url" placeholder="https://xxxxx.supabase.co"></div>
+    <div class="field"><label for="cfg-key">Anon public key</label><input type="text" id="cfg-key" placeholder="eyJhbGciOi..."></div>
+    <button id="btn-connect">Conectar</button>
+    <div class="gate-error" id="connect-error"></div>
+  </div>
+</div>
+
+<!-- ===================== TELA: LOGIN / CADASTRO ===================== -->
+<div class="gate-wrap" id="gate-auth" style="display:none;">
+  <div class="glass gate-card">
+    <h1 id="auth-title">Entrar</h1>
+    <p class="gate-sub">Use o mesmo e-mail e senha no computador e no celular para sincronizar os dados.</p>
+    <div class="field"><label for="auth-email">E-mail</label><input type="email" id="auth-email" placeholder="voce@email.com"></div>
+    <div class="field"><label for="auth-pass">Senha</label><input type="password" id="auth-pass" placeholder="mínimo 6 caracteres"></div>
+    <button id="btn-auth-submit">Entrar</button>
+    <div class="gate-error" id="auth-error"></div>
+    <div class="gate-switch">
+      <span id="auth-switch-text">Ainda não tem conta?</span> <a id="auth-switch-link">Criar conta</a>
+    </div>
+    <p class="gate-note">Seus dados ficam protegidos por login — só você, autenticado com essa senha, consegue ler ou alterar seus lançamentos.</p>
+    <p class="gate-note" style="border-top:none; padding-top:0;"><a id="btn-reconfigure" style="color:var(--text-faint); cursor:pointer; text-decoration:underline;">Trocar de projeto Supabase</a></p>
+  </div>
+</div>
+
+<div id="app-shell">
+<div class="app">
+
+  <div class="top">
+    <div>
+      <p class="eyebrow">Freelancer · Turnos & Ganhos</p>
+      <h1>Painel de Ganhos</h1>
+    </div>
+    <div class="topbar-account">
+      <button class="icon-btn" id="btn-toggle-privacy" title="Mostrar/ocultar valores" aria-label="Mostrar/ocultar valores"></button>
+      <span id="account-email"></span>
+      <button class="secondary" id="btn-logout">Sair</button>
+    </div>
+  </div>
+
+  <div class="top" style="margin-top:-14px;">
+    <nav class="tabs">
+      <button class="tab active" data-tab="resumo">Resumo</button>
+      <button class="tab" data-tab="calendario">Calendário</button>
+      <button class="tab" data-tab="lancamentos">Lançamentos</button>
+      <button class="tab" data-tab="parametros">Parâmetros</button>
+    </nav>
+  </div>
+
+  <!-- ===================== RESUMO ===================== -->
+  <section id="panel-resumo" class="panel active">
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <div class="period-grid" id="period-grid"></div>
+
+    <div class="glass heatmap-card">
+      <h2 class="section-title">Seu ano em turnos</h2>
+      <p class="section-sub" id="heatmap-sub">cada quadrado é um dia — quanto mais forte a cor, maior o ganho</p>
+      <div class="heatmap-scroll">
+        <div class="heatmap-months" id="heatmap-months"></div>
+        <div class="heatmap-body">
+          <div class="heatmap-rowlabels">
+            <span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span><span>Dom</span>
+          </div>
+          <div class="heatmap-grid" id="heatmap-grid"></div>
+        </div>
+      </div>
+      <div class="heatmap-legend">
+        <span>Menos</span>
+        <span class="hcell" data-level="0"></span>
+        <span class="hcell" data-level="1"></span>
+        <span class="hcell" data-level="2"></span>
+        <span class="hcell" data-level="3"></span>
+        <span class="hcell" data-level="4"></span>
+        <span>Mais</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="glass card" style="margin-bottom:0;">
+        <h2 class="section-title">Resumo Mensal</h2>
+        <p class="section-sub">% da meta de cada mês</p>
+        <div id="monthly-list"></div>
+      </div>
+      <div class="glass card" style="margin-bottom:0;">
+        <h2 class="section-title">Por Dia da Semana</h2>
+        <p class="section-sub">onde seu ganho se concentra</p>
+        <div id="weekday-list"></div>
+      </div>
+    </div>
+
+    <div class="glass chart-card">
+      <h2 class="section-title">Ganho por Mês</h2>
+      <p class="section-sub">&nbsp;</p>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="glass chart-card">
+      <h2 class="section-title">Evolução no Mês Atual</h2>
+      <p class="section-sub">ganho acumulado, dia a dia</p>
+      <div class="line-chart-wrap" id="line-chart"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="glass card" style="margin-bottom:0;">
+        <h2 class="section-title">Completo vs Meio</h2>
+        <p class="section-sub">distribuição dos seus turnos</p>
+        <div class="pie-wrap" id="pie-chart"></div>
+      </div>
+      <div class="glass card" style="margin-bottom:0;">
+        <h2 class="section-title">Últimos 12 Meses</h2>
+        <p class="section-sub">janela móvel, até o mês atual</p>
+        <div class="chart" id="chart-12m" style="height:120px;"></div>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <h2 class="section-title">Estatísticas</h2>
+      <p class="section-sub">curiosidades sobre seu histórico completo</p>
+      <div class="stats-mini-grid" id="stats-mini-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CALENDÁRIO ===================== -->
+  <section id="panel-calendario" class="panel">
+    <div class="glass card">
+      <div class="cal-nav">
+        <div class="cal-nav-btns"><button class="secondary" id="cal-prev">‹</button></div>
+        <div class="cal-title" id="cal-title"></div>
+        <div class="cal-nav-btns"><button class="secondary" id="cal-next">›</button><button class="secondary" id="cal-today">Hoje</button></div>
+      </div>
+      <div class="cal-weekdays"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== LANÇAMENTOS ===================== -->
+  <section id="panel-lancamentos" class="panel">
+    <div class="glass card">
+      <h2 class="section-title">Novo Lançamento</h2>
+      <p class="section-sub">preencha data e turno — o valor calcula sozinho, a não ser que você personalize</p>
+      <div class="form-row">
+        <div class="field"><label for="in-data">Data</label><input type="date" id="in-data"></div>
+        <div class="field"><label for="in-turno">Turno</label>
+          <select id="in-turno"><option value="Completo">Completo</option><option value="Meio">Meio</option></select>
+        </div>
+        <div class="field"><label for="in-custom">Valor personalizado</label><input type="number" id="in-custom" placeholder="opcional" step="0.01" min="0"></div>
+        <button id="btn-add">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <h2 class="section-title">Filtros & Busca</h2>
+      <p class="section-sub">refine a lista abaixo</p>
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar por data, mês ou turno...">
+      </div>
+      <div class="filter-bar">
+        <div class="field"><label for="f-mes">Mês</label>
+          <select id="f-mes">
+            <option value="todos">Todos</option>
+            <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+            <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+            <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+            <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
+          </select>
+        </div>
+        <div class="field"><label for="f-ano">Ano</label><input type="number" id="f-ano" placeholder="todos" step="1"></div>
+        <div class="field"><label for="f-inicio">De</label><input type="date" id="f-inicio"></div>
+        <div class="field"><label for="f-fim">Até</label><input type="date" id="f-fim"></div>
+        <div class="field"><label for="f-turno">Turno</label>
+          <select id="f-turno"><option value="todos">Todos</option><option value="Completo">Completo</option><option value="Meio">Meio</option></select>
+        </div>
+        <div class="field" style="flex-direction:row; align-items:center; gap:8px; min-width:auto;">
+          <input type="checkbox" id="f-personalizados" style="width:16px; height:16px;">
+          <label for="f-personalizados" style="text-transform:none; font-size:12.5px;">só personalizados</label>
+        </div>
+        <button class="secondary" id="btn-clear-filters">Limpar filtros</button>
+      </div>
+      <p class="filter-result" id="filter-result"></p>
+    </div>
+
+    <div class="glass card">
+      <h2 class="section-title">Todos os Lançamentos</h2>
+      <p class="section-sub">mais recente primeiro</p>
+      <div style="max-height:460px; overflow-y:auto;">
+        <div class="entry-list" id="entries-list"></div>
+      </div>
+      <div id="entries-empty" class="empty-state" style="display:none;">Nenhum lançamento ainda. Adicione o primeiro turno acima.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PARÂMETROS ===================== -->
+  <section id="panel-parametros" class="panel">
+    <div class="glass card">
+      <h2 class="section-title">Parâmetros de Cálculo</h2>
+      <p class="section-sub">mude os valores e tudo se ajusta sozinho</p>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="field"><label for="p-meio">Turno Meio (R$)</label><input type="number" id="p-meio" step="0.01" min="0"></div>
+        <div class="field"><label for="p-semana">Completo — semana (R$)</label><input type="number" id="p-semana" step="0.01" min="0"></div>
+        <div class="field"><label for="p-fds">Completo — sex/sáb (R$)</label><input type="number" id="p-fds" step="0.01" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="p-ano">Ano de referência</label><input type="number" id="p-ano" step="1"></div>
+        <div class="field"><label for="p-meta">Meta mensal (R$)</label><input type="number" id="p-meta" step="0.01" min="0"></div>
+        <button id="btn-save-params">Salvar</button>
+        <span class="save-msg" id="save-msg">Salvo ✓</span>
+      </div>
+      <p class="params-note">
+        • Turno "Meio" sempre vale o mesmo valor, não importa o dia.<br>
+        • Turno "Completo" vale mais em sextas e sábados.<br>
+        • Um valor personalizado lançado em Lançamentos sempre tem prioridade.
+      </p>
+    </div>
+
+    <div class="glass card">
+      <h2 class="section-title">Backup</h2>
+      <p class="section-sub">baixe uma cópia dos seus dados de vez em quando — sua rede de segurança se algo der errado na nuvem</p>
+      <div class="form-row">
+        <button id="btn-export">Exportar backup (.json)</button>
+        <button class="secondary" id="btn-import">Importar backup</button>
+        <input type="file" id="input-import" accept="application/json" style="display:none;">
+      </div>
+      <p class="params-note" id="backup-msg"></p>
+    </div>
+
+    <button class="secondary" id="btn-reset">Restaurar dados originais</button>
+  </section>
+
+</div>
+</div>
+
+<!-- ===================== MODAL: DIA DO CALENDÁRIO ===================== -->
+<div class="modal-backdrop" id="day-modal">
+  <div class="glass modal-box">
+    <button class="modal-close" id="modal-close" aria-label="Fechar">&times;</button>
+    <h3 id="modal-title"></h3>
+    <div id="modal-entries"></div>
+    <div class="modal-add-form">
+      <div class="form-row">
+        <div class="field"><label for="modal-turno">Turno</label>
+          <select id="modal-turno"><option value="Completo">Completo</option><option value="Meio">Meio</option></select>
+        </div>
+        <div class="field"><label for="modal-custom">Valor personalizado</label><input type="number" id="modal-custom" placeholder="opcional" step="0.01" min="0"></div>
+        <button id="modal-add-btn">+ Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const KEY_ENTRIES = "freelancer_entries_v1";
+  const KEY_PARAMS = "freelancer_params_v1";
+
+  const SEED = [["2026-01-17","Completo"],["2026-01-18","Completo"],["2026-01-24","Completo"],["2026-01-25","Completo"],["2026-01-30","Meio"],["2026-01-31","Completo"],["2026-02-01","Completo"],["2026-02-06","Meio"],["2026-02-07","Meio"],["2026-02-08","Completo"],["2026-02-13","Meio"],["2026-02-14","Completo"],["2026-02-15","Completo"],["2026-02-16","Completo"],["2026-02-17","Completo"],["2026-02-21","Completo"],["2026-02-22","Completo"],["2026-02-27","Meio"],["2026-02-28","Completo"],["2026-03-01","Completo"],["2026-03-02","Meio"],["2026-03-05","Meio"],["2026-03-06","Meio"],["2026-03-07","Completo"],["2026-03-08","Completo"],["2026-03-13","Meio"],["2026-03-27","Meio"],["2026-03-28","Completo"],["2026-03-29","Completo"],["2026-04-03","Completo"],["2026-04-04","Completo"],["2026-04-05","Completo"],["2026-04-10","Meio"],["2026-04-15","Meio"],["2026-04-17","Meio"],["2026-04-18","Completo"],["2026-04-19","Completo"],["2026-04-24","Meio"],["2026-04-25","Completo"],["2026-04-26","Completo"],["2026-05-02","Completo"],["2026-05-03","Completo"],["2026-05-09","Completo"],["2026-05-10","Completo"],["2026-05-15","Meio"],["2026-05-16","Completo"],["2026-05-17","Completo"],["2026-05-22","Meio"],["2026-05-23","Completo"],["2026-05-24","Completo"],["2026-05-27","Meio"],["2026-05-29","Completo"],["2026-06-01","Meio"],["2026-06-02","Meio"],["2026-06-03","Meio"],["2026-06-04","Meio"],["2026-06-05","Meio"],["2026-06-06","Completo"],["2026-06-07","Completo"],["2026-06-12","Meio"],["2026-06-13","Completo"],["2026-06-14","Completo"],["2026-06-22","Meio"],["2026-06-26","Meio"],["2026-06-27","Completo"],["2026-06-28","Completo"],["2026-06-29","Meio"],["2026-07-03","Meio"],["2026-07-04","Completo"],["2026-07-05","Completo"],["2026-07-06","Meio"],["2026-07-07","Meio"],["2026-07-08","Meio"],["2026-07-09","Completo"],["2026-07-10","Meio"],["2026-07-13","Meio"],["2026-07-14","Meio"],["2026-07-16","Meio"],["2026-07-17","Meio"],["2026-07-18","Completo"],["2026-07-21","Meio"],["2026-07-22","Meio"],["2026-07-24","Meio"],["2026-07-25","Completo"],["2026-07-26","Meio"],["2026-07-31","Meio"],["2026-08-01","Completo"],["2026-08-02","Meio"]];
+
+  const DEFAULT_PARAMS = { meio: 125, completoSemana: 225, completoFDS: 250, ano: 2026, meta: 2500 };
+
+  const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const MONTH_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const WEEKDAY_ORDER = [1,2,3,4,5,6,0]; // Mon..Sun, mapped to JS getDay()
+  const WEEKDAY_NAMES = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+
+  let state = { entries: [], params: { ...DEFAULT_PARAMS } };
+  let nextId = 1;
+  let editingId = null;
+
+  const LS_URL = "freelancer_supabase_url";
+  const LS_KEY = "freelancer_supabase_key";
+  const LS_HIDE = "freelancer_hide_values";
+  let sb = null;
+  let session = null;
+  let hideValues = localStorage.getItem(LS_HIDE) === "1";
+
+  const ICON_EYE = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const ICON_EYE_OFF = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61C3.35 8.36 1 12 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>`;
+
+  function fmtBRL(n){
+    if (hideValues) return "R$ ••••••";
+    return "R$ " + (Math.round(n*100)/100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calcValor(dateStr, turno, custom){
+    if (custom !== null && custom !== undefined && custom !== "" && !isNaN(custom)) return Number(custom);
+    if (!dateStr || !turno) return 0;
+    const d = new Date(dateStr + "T00:00:00");
+    const dow = d.getDay();
+    if (turno === "Meio") return state.params.meio;
+    if (turno === "Completo") return (dow === 5 || dow === 6) ? state.params.completoFDS : state.params.completoSemana;
+    return 0;
+  }
+
+  function computeStats(){
+    let total = 0, diasCompleto = 0, diasMeio = 0;
+    const monthly = Array.from({length:12}, () => ({ ganho: 0, dias: 0 }));
+    const weekday = Array.from({length:7}, () => ({ ganho: 0, dias: 0 }));
+    const valueByDate = {};
+
+    state.entries.forEach(e => {
+      const valor = calcValor(e.date, e.turno, e.custom);
+      total += valor;
+      if (e.turno === "Completo") diasCompleto++;
+      if (e.turno === "Meio") diasMeio++;
+      const d = new Date(e.date + "T00:00:00");
+      const dow = d.getDay();
+      if (d.getFullYear() === Number(state.params.ano)) {
+        monthly[d.getMonth()].ganho += valor;
+        monthly[d.getMonth()].dias += 1;
+        valueByDate[e.date] = (valueByDate[e.date] || 0) + valor;
+      }
+      weekday[dow].ganho += valor;
+      weekday[dow].dias += 1;
+    });
+
+    const dias = state.entries.length;
+    const media = dias > 0 ? total / dias : 0;
+    return { total, dias, media, diasCompleto, diasMeio, monthly, weekday, valueByDate };
+  }
+
+  // ---------- período atual: mês, semana, meta, previsão ----------
+  function computeCurrentPeriod(){
+    const today = new Date();
+    const year = today.getFullYear(), month = today.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const dayOfMonth = today.getDate();
+
+    let ganhoMes = 0, turnosMes = 0;
+    const monthDates = new Set();
+    state.entries.forEach(e => {
+      const d = new Date(e.date + "T00:00:00");
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        ganhoMes += calcValor(e.date, e.turno, e.custom);
+        turnosMes += 1;
+        monthDates.add(e.date);
+      }
+    });
+
+    const mIdx = (today.getDay() + 6) % 7;
+    const monday = new Date(today); monday.setHours(0,0,0,0); monday.setDate(today.getDate() - mIdx);
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+    let ganhoSemana = 0;
+    state.entries.forEach(e => {
+      const d = new Date(e.date + "T00:00:00");
+      if (d >= monday && d <= sunday) ganhoSemana += calcValor(e.date, e.turno, e.custom);
+    });
+
+    const mediaDiaria = dayOfMonth > 0 ? ganhoMes / dayOfMonth : 0;
+    const diasRestantes = daysInMonth - dayOfMonth;
+    const previsao = ganhoMes + mediaDiaria * diasRestantes;
+    const diasTrabalhadosMes = monthDates.size;
+    const diasLivresMes = daysInMonth - diasTrabalhadosMes;
+    const meta = Number(state.params.meta) || 0;
+    const pctMeta = meta > 0 ? ganhoMes / meta : 0;
+    const restanteMeta = Math.max(meta - ganhoMes, 0);
+
+    return { today, year, month, ganhoMes, turnosMes, ganhoSemana, mediaDiaria, diasRestantes, previsao, daysInMonth, dayOfMonth, diasTrabalhadosMes, diasLivresMes, meta, pctMeta, restanteMeta };
+  }
+
+  // ---------- últimos 12 meses (janela móvel, termina no mês atual real) ----------
+  function computeLast12Months(){
+    const today = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      months.push({ year: d.getFullYear(), month: d.getMonth(), ganho: 0, dias: 0, label: MONTH_SHORT[d.getMonth()] });
+    }
+    state.entries.forEach(e => {
+      const valor = calcValor(e.date, e.turno, e.custom);
+      const d = new Date(e.date + "T00:00:00");
+      const bucket = months.find(m => m.year === d.getFullYear() && m.month === d.getMonth());
+      if (bucket) { bucket.ganho += valor; bucket.dias += 1; }
+    });
+    return months;
+  }
+
+  // ---------- estatísticas extras ----------
+  function computeExtraStats(){
+    const byDate = {};
+    state.entries.forEach(e => {
+      const v = calcValor(e.date, e.turno, e.custom);
+      byDate[e.date] = (byDate[e.date] || 0) + v;
+    });
+    const dates = Object.keys(byDate).sort();
+    const values = dates.map(d => byDate[d]);
+
+    const maiorGanhoDia = values.length ? Math.max(...values) : 0;
+    const menorGanhoDia = values.length ? Math.min(...values) : 0;
+
+    let maiorSequencia = dates.length ? 1 : 0;
+    let cur = dates.length ? 1 : 0;
+    let maiorIntervalo = 0;
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(dates[i-1] + "T00:00:00");
+      const curD = new Date(dates[i] + "T00:00:00");
+      const diffDays = Math.round((curD - prev) / 86400000);
+      if (diffDays === 1) { cur++; maiorSequencia = Math.max(maiorSequencia, cur); }
+      else { cur = 1; }
+      maiorIntervalo = Math.max(maiorIntervalo, diffDays - 1);
+    }
+
+    let qtdSextas = 0, qtdSabados = 0;
+    dates.forEach(d => {
+      const dow = new Date(d + "T00:00:00").getDay();
+      if (dow === 5) qtdSextas++;
+      if (dow === 6) qtdSabados++;
+    });
+
+    const weekKeys = new Set(), monthKeys = new Set();
+    dates.forEach(d => {
+      const dt = new Date(d + "T00:00:00");
+      const mIdx = (dt.getDay() + 6) % 7;
+      const monday = new Date(dt); monday.setDate(dt.getDate() - mIdx);
+      weekKeys.add(monday.toISOString().slice(0,10));
+      monthKeys.add(dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0"));
+    });
+    const total = values.reduce((a,b) => a+b, 0);
+    const mediaSemanal = weekKeys.size ? total / weekKeys.size : 0;
+    const mediaMensal = monthKeys.size ? total / monthKeys.size : 0;
+
+    return { maiorGanhoDia, menorGanhoDia, maiorSequencia, maiorIntervalo, qtdSextas, qtdSabados, mediaSemanal, mediaMensal };
+  }
+
+  // ---------- filtros globais (Lançamentos: lista + busca) ----------
+  let filters = { mes: "todos", ano: "", inicio: "", fim: "", turno: "todos", somentePersonalizados: false };
+  let searchText = "";
+
+  function getFilteredEntries(){
+    return state.entries.filter(e => {
+      const d = new Date(e.date + "T00:00:00");
+      if (filters.mes !== "todos" && d.getMonth() !== Number(filters.mes)) return false;
+      if (filters.ano !== "" && d.getFullYear() !== Number(filters.ano)) return false;
+      if (filters.inicio && e.date < filters.inicio) return false;
+      if (filters.fim && e.date > filters.fim) return false;
+      if (filters.turno !== "todos" && e.turno !== filters.turno) return false;
+      const hasCustom = e.custom !== null && e.custom !== undefined && e.custom !== "";
+      if (filters.somentePersonalizados && !hasCustom) return false;
+      if (searchText) {
+        const q = searchText.toLowerCase();
+        const dateBR = e.date.split("-").reverse().join("/");
+        const monthName = MONTH_NAMES[d.getMonth()].toLowerCase();
+        const hay = `${dateBR} ${monthName} ${e.turno}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  // ---------- supabase: connection + auth ----------
+  function initClient(url, key){
+    sb = window.supabase.createClient(url, key);
+  }
+
+  async function tryAutoConnect(){
+    const url = localStorage.getItem(LS_URL);
+    const key = localStorage.getItem(LS_KEY);
+    if (!url || !key) { showGate("connect"); return; }
+    initClient(url, key);
+    const { data } = await sb.auth.getSession();
+    if (data && data.session) {
+      session = data.session;
+      startApp();
+    } else {
+      showGate("auth");
+    }
+  }
+
+  function showGate(which){
+    document.getElementById("gate-connect").style.display = which === "connect" ? "flex" : "none";
+    document.getElementById("gate-auth").style.display = which === "auth" ? "flex" : "none";
+    document.getElementById("app-shell").style.display = "none";
+  }
+
+  document.getElementById("btn-connect").addEventListener("click", async () => {
+    const url = document.getElementById("cfg-url").value.trim();
+    const key = document.getElementById("cfg-key").value.trim();
+    const err = document.getElementById("connect-error");
+    err.textContent = "";
+    if (!url || !key) { err.textContent = "Preencha os dois campos."; return; }
+    try {
+      initClient(url, key);
+      // sanity check: a harmless call that fails cleanly if URL/key are wrong
+      await sb.auth.getSession();
+      localStorage.setItem(LS_URL, url);
+      localStorage.setItem(LS_KEY, key);
+      showGate("auth");
+    } catch (e) {
+      err.textContent = "Não consegui conectar. Confira a URL e a chave.";
+    }
+  });
+
+  let authMode = "signin"; // or "signup"
+  document.getElementById("auth-switch-link").addEventListener("click", () => {
+    authMode = authMode === "signin" ? "signup" : "signin";
+    document.getElementById("auth-title").textContent = authMode === "signin" ? "Entrar" : "Criar conta";
+    document.getElementById("btn-auth-submit").textContent = authMode === "signin" ? "Entrar" : "Criar conta";
+    document.getElementById("auth-switch-text").textContent = authMode === "signin" ? "Ainda não tem conta?" : "Já tem conta?";
+    document.getElementById("auth-switch-link").textContent = authMode === "signin" ? "Criar conta" : "Entrar";
+    document.getElementById("auth-error").textContent = "";
+  });
+
+  document.getElementById("btn-auth-submit").addEventListener("click", async () => {
+    const email = document.getElementById("auth-email").value.trim();
+    const pass = document.getElementById("auth-pass").value;
+    const err = document.getElementById("auth-error");
+    err.textContent = "";
+    if (!email || !pass) { err.textContent = "Preencha e-mail e senha."; return; }
+    try {
+      if (authMode === "signin") {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        session = data.session;
+        startApp();
+      } else {
+        const { data, error } = await sb.auth.signUp({ email, password: pass });
+        if (error) throw error;
+        if (data.session) {
+          session = data.session;
+          startApp();
+        } else {
+          err.textContent = "Conta criada! Confirme seu e-mail (verifique a caixa de entrada) e depois entre.";
+        }
+      }
+    } catch (e) {
+      err.textContent = e.message || "Não foi possível autenticar.";
+    }
+  });
+
+  document.getElementById("btn-logout").addEventListener("click", async () => {
+    if (!confirm("Sair da conta?")) return;
+    await sb.auth.signOut();
+    session = null;
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-pass").value = "";
+    showGate("auth");
+  });
+
+  document.getElementById("btn-reconfigure").addEventListener("click", () => {
+    localStorage.removeItem(LS_URL);
+    localStorage.removeItem(LS_KEY);
+    document.getElementById("cfg-url").value = "";
+    document.getElementById("cfg-key").value = "";
+    showGate("connect");
+  });
+
+  function updatePrivacyIcon(){
+    document.getElementById("btn-toggle-privacy").innerHTML = hideValues ? ICON_EYE_OFF : ICON_EYE;
+  }
+  document.getElementById("btn-toggle-privacy").addEventListener("click", () => {
+    hideValues = !hideValues;
+    localStorage.setItem(LS_HIDE, hideValues ? "1" : "0");
+    updatePrivacyIcon();
+    renderResumo();
+    renderEntries();
+    renderCalendar();
+  });
+
+  async function startApp(){
+    document.getElementById("gate-connect").style.display = "none";
+    document.getElementById("gate-auth").style.display = "none";
+    document.getElementById("app-shell").style.display = "block";
+    document.getElementById("account-email").textContent = session.user.email;
+    updatePrivacyIcon();
+    await loadData();
+    renderResumo();
+    renderEntries();
+    renderParametros();
+    renderCalendar();
+  }
+
+  // ---------- storage (Supabase, scoped to the logged-in user via RLS) ----------
+  async function loadData(){
+    const { data, error } = await sb.from("freelancer_data").select("key,value");
+    if (error) { console.error(error); }
+    const rows = data || [];
+    const entriesRow = rows.find(r => r.key === "entries");
+    const paramsRow = rows.find(r => r.key === "params");
+
+    if (entriesRow) {
+      state.entries = entriesRow.value;
+    } else {
+      state.entries = SEED.map(([date, turno], i) => ({ id: "e" + i, date, turno, custom: null }));
+      await saveEntries();
+    }
+    if (paramsRow) {
+      state.params = paramsRow.value;
+    } else {
+      state.params = { ...DEFAULT_PARAMS };
+      await saveParams();
+    }
+    const maxId = state.entries.reduce((m, e) => {
+      const n = parseInt(String(e.id).replace(/\D/g,""), 10);
+      return isNaN(n) ? m : Math.max(m, n);
+    }, 0);
+    nextId = maxId + 1;
+  }
+  async function saveEntries(){
+    const { error } = await sb.from("freelancer_data").upsert(
+      { user_id: session.user.id, key: "entries", value: state.entries, updated_at: new Date().toISOString() },
+      { onConflict: "user_id,key" }
+    );
+    if (error) console.error("Erro ao salvar lançamentos:", error);
+  }
+  async function saveParams(){
+    const { error } = await sb.from("freelancer_data").upsert(
+      { user_id: session.user.id, key: "params", value: state.params, updated_at: new Date().toISOString() },
+      { onConflict: "user_id,key" }
+    );
+    if (error) console.error("Erro ao salvar parâmetros:", error);
+  }
+
+  // ---------- tabs ----------
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---------- heatmap ----------
+  function buildHeatmapCells(year, valueByDate){
+    const jan1 = new Date(year, 0, 1);
+    const dec31 = new Date(year, 11, 31);
+    const mondayIndex = (d) => (d.getDay() + 6) % 7;
+    const gridStart = new Date(jan1);
+    gridStart.setDate(gridStart.getDate() - mondayIndex(jan1));
+    const gridEnd = new Date(dec31);
+    gridEnd.setDate(gridEnd.getDate() + (6 - mondayIndex(dec31)));
+
+    const cells = [];
+    let cursor = new Date(gridStart);
+    let col = 0;
+    while (cursor <= gridEnd) {
+      const row = mondayIndex(cursor);
+      const inYear = cursor.getFullYear() === year;
+      const key = cursor.getFullYear() + "-" + String(cursor.getMonth()+1).padStart(2,"0") + "-" + String(cursor.getDate()).padStart(2,"0");
+      const value = inYear ? (valueByDate[key] || 0) : 0;
+      cells.push({ col, row, date: key, inYear, value });
+      if (row === 6) col++;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return cells;
+  }
+
+  function levelForValue(v, max){
+    if (v <= 0) return 0;
+    const r = v / max;
+    if (r > .8) return 4;
+    if (r > .55) return 3;
+    if (r > .3) return 2;
+    return 1;
+  }
+
+  function renderHeatmap(stats){
+    const year = Number(state.params.ano);
+    const cells = buildHeatmapCells(year, stats.valueByDate);
+    const maxVal = Math.max(...cells.map(c => c.value), 1);
+    const totalCols = Math.max(...cells.map(c => c.col)) + 1;
+
+    const grid = document.getElementById("heatmap-grid");
+    grid.style.gridTemplateColumns = `repeat(${totalCols}, 11px)`;
+    grid.innerHTML = cells.map(c => {
+      const lvl = c.inYear ? levelForValue(c.value, maxVal) : -1;
+      const bg = lvl === -1 ? "rgba(255,255,255,.02)" : heatmapColor(lvl);
+      const title = c.inYear ? `${c.date.split("-").reverse().join("/")} · ${c.value > 0 ? fmtBRL(c.value) : "sem turno"}` : "";
+      return `<div class="hcell" style="grid-column:${c.col+1}; grid-row:${c.row+1}; background:${bg};" title="${title}"></div>`;
+    }).join("");
+
+    const monthsEl = document.getElementById("heatmap-months");
+    monthsEl.style.gridTemplateColumns = `repeat(${totalCols}, 11px)`;
+    const monthLabels = new Array(totalCols).fill("");
+    for (let m = 0; m < 12; m++) {
+      const firstOfMonth = cells.find(c => c.inYear && c.date === `${year}-${String(m+1).padStart(2,"0")}-01`);
+      if (firstOfMonth) monthLabels[firstOfMonth.col] = MONTH_SHORT[m];
+    }
+    monthsEl.innerHTML = monthLabels.map((lbl, i) => `<span style="grid-column:${i+1};">${lbl}</span>`).join("");
+
+    document.querySelectorAll(".heatmap-legend .hcell").forEach(el => {
+      const lvl = Number(el.dataset.level);
+      el.style.background = heatmapColor(lvl);
+    });
+  }
+  function heatmapColor(level){
+    const colors = ["rgba(255,255,255,.06)", "rgba(124,124,240,.35)", "rgba(124,124,240,.6)", "rgba(90,180,220,.75)", "rgba(51,217,175,.9)"];
+    return colors[level] || colors[0];
+  }
+
+  // ---------- resumo ----------
+  function renderResumo(){
+    const s = computeStats();
+    const grid = document.getElementById("stat-grid");
+    grid.innerHTML = `
+      <div class="glass stat-card hero"><div class="label">Total Ganho</div><div class="value">${fmtBRL(s.total)}</div></div>
+      <div class="glass stat-card"><div class="label">Dias Trabalhados</div><div class="value">${s.dias}</div></div>
+      <div class="glass stat-card"><div class="label">Média por Dia</div><div class="value">${fmtBRL(s.media)}</div></div>
+      <div class="glass stat-card"><div class="label">Dias Completo</div><div class="value">${s.diasCompleto}</div></div>
+      <div class="glass stat-card"><div class="label">Dias Meio</div><div class="value">${s.diasMeio}</div></div>
+    `;
+
+    renderHeatmap(s);
+
+    const meta = Number(state.params.meta) || 0;
+    const mList = document.getElementById("monthly-list");
+    mList.innerHTML = s.monthly.map((m, i) => {
+      const pct = meta > 0 ? m.ganho / meta : 0;
+      const pctPct = Math.min(pct * 100, 100);
+      const hit = pct >= 1;
+      return `<div class="modern-row">
+        <span class="name">${MONTH_NAMES[i]}${hit ? '<span class="badge ok">meta ✓</span>' : ""}</span>
+        <span class="num"><span class="mini-bar-bg"><span class="mini-bar-fill ${hit ? "" : "under"}" style="width:${pctPct}%;"></span></span>${fmtBRL(m.ganho)}</span>
+      </div>`;
+    }).join("");
+
+    const wList = document.getElementById("weekday-list");
+    const maxGanho = Math.max(...s.weekday.map(w => w.ganho), 1);
+    wList.innerHTML = WEEKDAY_ORDER.map((dow, idx) => {
+      const w = s.weekday[dow];
+      const isPeak = w.ganho === maxGanho && maxGanho > 0;
+      const pct = (w.ganho / maxGanho) * 100;
+      return `<div class="modern-row">
+        <span class="name">${WEEKDAY_NAMES[idx]}${isPeak ? '<span class="badge peak">pico</span>' : ""}</span>
+        <span class="num"><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${pct}%;"></span></span>${fmtBRL(w.ganho)}</span>
+      </div>`;
+    }).join("");
+
+    const chart = document.getElementById("chart");
+    const maxMonthly = Math.max(...s.monthly.map(m => m.ganho), 1);
+    chart.innerHTML = s.monthly.map((m, i) => {
+      const h = Math.max((m.ganho / maxMonthly) * 100, m.ganho > 0 ? 3 : 0);
+      return `<div class="bar-col" title="${MONTH_NAMES[i]}: ${fmtBRL(m.ganho)}">
+        <div class="bar" style="height:${h}%;"></div>
+        <div class="bar-label">${MONTH_SHORT[i]}</div>
+      </div>`;
+    }).join("");
+
+    renderPeriodCards();
+    renderLineChart();
+    renderPieChart(s);
+    renderChart12m();
+    renderStatsGrid();
+  }
+
+  // ---------- cards de período: mês, semana, meta, previsão ----------
+  function renderPeriodCards(){
+    const p = computeCurrentPeriod();
+    const pctPct = Math.min(p.pctMeta * 100, 100);
+    const grid = document.getElementById("period-grid");
+    grid.innerHTML = `
+      <div class="glass period-card">
+        <div class="label">Ganho do Mês</div>
+        <div class="value">${fmtBRL(p.ganhoMes)}</div>
+        <div class="sub">${p.turnosMes} turno${p.turnosMes === 1 ? "" : "s"}</div>
+      </div>
+      <div class="glass period-card">
+        <div class="label">Ganho da Semana</div>
+        <div class="value">${fmtBRL(p.ganhoSemana)}</div>
+        <div class="sub">segunda a domingo</div>
+      </div>
+      <div class="glass period-card">
+        <div class="label">Meta do Mês</div>
+        <div class="value">${fmtBRL(p.ganhoMes)} / ${fmtBRL(p.meta)}</div>
+        <div class="sub">${p.meta > 0 ? Math.round(p.pctMeta*100) + "% · faltam " + fmtBRL(p.restanteMeta) : "defina uma meta em Parâmetros"}</div>
+        <div class="progress-track"><div class="progress-fill ${p.pctMeta >= 1 ? "over" : ""}" id="meta-progress-fill"></div></div>
+      </div>
+      <div class="glass period-card">
+        <div class="label">Previsão do Mês</div>
+        <div class="value">${fmtBRL(p.previsao)}</div>
+        <div class="sub">média ${fmtBRL(p.mediaDiaria)}/dia · ${p.diasRestantes} dias restantes</div>
+      </div>
+    `;
+    // anima a barra de progresso no próximo frame
+    requestAnimationFrame(() => {
+      const fill = document.getElementById("meta-progress-fill");
+      if (fill) fill.style.width = pctPct + "%";
+    });
+  }
+
+  // ---------- gráfico de linha: evolução acumulada no mês atual ----------
+  function renderLineChart(){
+    const today = new Date();
+    const year = today.getFullYear(), month = today.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const dayOfMonth = today.getDate();
+
+    const dailyByDay = Array.from({length: daysInMonth}, () => 0);
+    state.entries.forEach(e => {
+      const d = new Date(e.date + "T00:00:00");
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        dailyByDay[d.getDate()-1] += calcValor(e.date, e.turno, e.custom);
+      }
+    });
+    let acc = 0;
+    const cumulative = dailyByDay.slice(0, dayOfMonth).map(v => (acc += v));
+    const maxVal = Math.max(...cumulative, 1);
+
+    const w = Math.max(daysInMonth * 22, 320);
+    const h = 130;
+    const padB = 18, padT = 8;
+    const stepX = w / (daysInMonth - 1 || 1);
+    const points = cumulative.map((v, i) => {
+      const x = i * stepX;
+      const y = padT + (1 - v / maxVal) * (h - padT - padB);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const pathD = points.length ? "M" + points.join(" L") : "";
+    const lastPoint = points.length ? points[points.length-1].split(",") : null;
+
+    const areaD = points.length
+      ? `M0,${h-padB} L${points.join(" L")} L${(points.length-1)*stepX},${h-padB} Z`
+      : "";
+
+    const container = document.getElementById("line-chart");
+    container.innerHTML = `
+      <svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+        <defs>
+          <linearGradient id="lineFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(51,217,175,.35)"/>
+            <stop offset="100%" stop-color="rgba(51,217,175,0)"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="${h-padB}" x2="${w}" y2="${h-padB}" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+        ${areaD ? `<path d="${areaD}" fill="url(#lineFade)" stroke="none"/>` : ""}
+        ${pathD ? `<path d="${pathD}" fill="none" stroke="var(--accent-2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+        ${lastPoint ? `<circle cx="${lastPoint[0]}" cy="${lastPoint[1]}" r="4" fill="var(--accent-2)"/>` : ""}
+      </svg>
+    `;
+  }
+
+  // ---------- gráfico de pizza: Completo vs Meio ----------
+  function renderPieChart(s){
+    const total = s.diasCompleto + s.diasMeio;
+    const pctCompleto = total > 0 ? (s.diasCompleto / total) * 100 : 0;
+    const pie = document.getElementById("pie-chart");
+    if (total === 0) {
+      pie.innerHTML = `<p class="section-sub">sem lançamentos ainda</p>`;
+      return;
+    }
+    pie.innerHTML = `
+      <div class="pie" style="background: conic-gradient(var(--accent) 0% ${pctCompleto}%, var(--accent-2) ${pctCompleto}% 100%);"></div>
+      <div class="pie-legend">
+        <span><span class="dot" style="background:var(--accent);"></span>Completo — ${s.diasCompleto} (${Math.round(pctCompleto)}%)</span>
+        <span><span class="dot" style="background:var(--accent-2);"></span>Meio — ${s.diasMeio} (${Math.round(100-pctCompleto)}%)</span>
+      </div>
+    `;
+  }
+
+  // ---------- barras: últimos 12 meses ----------
+  function renderChart12m(){
+    const months = computeLast12Months();
+    const max = Math.max(...months.map(m => m.ganho), 1);
+    const chart = document.getElementById("chart-12m");
+    chart.innerHTML = months.map(m => {
+      const hgt = Math.max((m.ganho / max) * 100, m.ganho > 0 ? 3 : 0);
+      return `<div class="bar-col" title="${m.label}/${m.year}: ${fmtBRL(m.ganho)}">
+        <div class="bar" style="height:${hgt}%;"></div>
+        <div class="bar-label">${m.label}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // ---------- grid de estatísticas extras ----------
+  function renderStatsGrid(){
+    const st = computeExtraStats();
+    const grid = document.getElementById("stats-mini-grid");
+    const items = [
+      ["Maior ganho em um dia", fmtBRL(st.maiorGanhoDia)],
+      ["Menor ganho em um dia", fmtBRL(st.menorGanhoDia)],
+      ["Maior sequência trabalhada", `${st.maiorSequencia} dia${st.maiorSequencia===1?"":"s"}`],
+      ["Maior intervalo sem trabalhar", `${st.maiorIntervalo} dia${st.maiorIntervalo===1?"":"s"}`],
+      ["Sextas trabalhadas", `${st.qtdSextas}`],
+      ["Sábados trabalhados", `${st.qtdSabados}`],
+      ["Média semanal", fmtBRL(st.mediaSemanal)],
+      ["Média mensal", fmtBRL(st.mediaMensal)],
+    ];
+    grid.innerHTML = items.map(([label, value]) => `
+      <div class="stats-mini"><div class="label">${label}</div><div class="value">${value}</div></div>
+    `).join("");
+  }
+
+  // ---------- entries: shared CRUD helpers (used by Lançamentos tab AND Calendário modal) ----------
+  const ICON_EDIT = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+  const ICON_TRASH = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
+
+  async function addEntry(date, turno, custom){
+    state.entries.push({
+      id: "e" + (nextId++),
+      date,
+      turno,
+      custom: (custom === "" || custom === null || custom === undefined) ? null : Number(custom)
+    });
+    await saveEntries();
+    renderEntries();
+    renderResumo();
+    renderCalendar();
+  }
+  async function updateEntry(id, date, turno, custom){
+    const entry = state.entries.find(x => x.id === id);
+    if (!entry) return;
+    entry.date = date;
+    entry.turno = turno;
+    entry.custom = (custom === "" || custom === null || custom === undefined) ? null : Number(custom);
+    await saveEntries();
+    renderEntries();
+    renderResumo();
+    renderCalendar();
+  }
+  async function deleteEntry(id){
+    state.entries = state.entries.filter(x => x.id !== id);
+    await saveEntries();
+    renderEntries();
+    renderResumo();
+    renderCalendar();
+  }
+
+  function dowName(dateStr){
+    const d = new Date(dateStr + "T00:00:00");
+    return ["domingo","segunda","terça","quarta","quinta","sexta","sábado"][d.getDay()];
+  }
+  function isWeekendDate(dateStr){
+    const d = new Date(dateStr + "T00:00:00");
+    return d.getDay() === 5 || d.getDay() === 6;
+  }
+
+  function renderEntries(){
+    const list = document.getElementById("entries-list");
+    const filtered = getFilteredEntries();
+    const sorted = [...filtered].sort((a,b) => b.date.localeCompare(a.date));
+    document.getElementById("entries-empty").style.display = sorted.length ? "none" : "block";
+
+    const resultEl = document.getElementById("filter-result");
+    if (resultEl) {
+      const activeFilters = filters.mes !== "todos" || filters.ano !== "" || filters.inicio || filters.fim || filters.turno !== "todos" || filters.somentePersonalizados || searchText;
+      if (activeFilters) {
+        const totalFiltrado = filtered.reduce((sum, e) => sum + calcValor(e.date, e.turno, e.custom), 0);
+        resultEl.textContent = `${filtered.length} lançamento${filtered.length===1?"":"s"} encontrado${filtered.length===1?"":"s"} · ${fmtBRL(totalFiltrado)}`;
+      } else {
+        resultEl.textContent = "";
+      }
+    }
+
+    list.innerHTML = sorted.map(e => {
+      if (editingId === e.id) {
+        return `<div class="entry-row" data-id="${e.id}">
+          <div class="form-row" style="width:100%; margin:2px 0;">
+            <div class="field"><label>Data</label><input type="date" class="edit-data" value="${e.date}"></div>
+            <div class="field"><label>Turno</label>
+              <select class="edit-turno">
+                <option value="Completo" ${e.turno==="Completo"?"selected":""}>Completo</option>
+                <option value="Meio" ${e.turno==="Meio"?"selected":""}>Meio</option>
+              </select>
+            </div>
+            <div class="field"><label>Valor personalizado</label><input type="number" step="0.01" class="edit-custom" value="${e.custom ?? ""}" placeholder="auto"></div>
+            <button class="btn-save-row">Salvar</button>
+            <button class="secondary btn-cancel-row">Cancelar</button>
+          </div>
+        </div>`;
+      }
+      const valor = calcValor(e.date, e.turno, e.custom);
+      const weekend = isWeekendDate(e.date);
+      const hasCustom = e.custom !== null && e.custom !== undefined && e.custom !== "";
+      return `<div class="entry-row" data-id="${e.id}">
+        <span class="entry-date">${e.date.split("-").reverse().join("/")}</span>
+        <span class="entry-day">${dowName(e.date)}</span>
+        <span class="chip ${e.turno === "Completo" ? "completo" : "meio"}">${e.turno}${weekend ? " · fds" : ""}</span>
+        <span class="entry-value">${fmtBRL(valor)}${hasCustom ? '<span class="entry-custom-tag">personalizado</span>' : ""}</span>
+        <div class="row-actions">
+          <button class="icon-btn btn-edit-row" title="Editar" aria-label="Editar">${ICON_EDIT}</button>
+          <button class="icon-btn btn-del-row" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    list.querySelectorAll(".btn-edit-row").forEach(btn => {
+      btn.addEventListener("click", (ev) => { editingId = ev.target.closest(".entry-row").dataset.id; renderEntries(); });
+    });
+    list.querySelectorAll(".btn-cancel-row").forEach(btn => {
+      btn.addEventListener("click", () => { editingId = null; renderEntries(); });
+    });
+    list.querySelectorAll(".btn-save-row").forEach(btn => {
+      btn.addEventListener("click", async (ev) => {
+        const row = ev.target.closest(".entry-row");
+        const id = row.dataset.id;
+        const newDate = row.querySelector(".edit-data").value;
+        const newTurno = row.querySelector(".edit-turno").value;
+        const newCustomRaw = row.querySelector(".edit-custom").value;
+        if (!newDate) { alert("Informe uma data válida."); return; }
+        editingId = null;
+        await updateEntry(id, newDate, newTurno, newCustomRaw);
+      });
+    });
+    list.querySelectorAll(".btn-del-row").forEach(btn => {
+      btn.addEventListener("click", async (ev) => {
+        const row = ev.target.closest(".entry-row");
+        const id = row.dataset.id;
+        if (!confirm("Excluir este lançamento?")) return;
+        await deleteEntry(id);
+      });
+    });
+  }
+
+  document.getElementById("btn-add").addEventListener("click", async () => {
+    const dataEl = document.getElementById("in-data");
+    const turnoEl = document.getElementById("in-turno");
+    const customEl = document.getElementById("in-custom");
+    if (!dataEl.value) { alert("Escolha uma data."); return; }
+    await addEntry(dataEl.value, turnoEl.value, customEl.value);
+    dataEl.value = "";
+    customEl.value = "";
+  });
+
+  // ---------- filtros & busca (aba Lançamentos) ----------
+  document.getElementById("search-input").addEventListener("input", (ev) => {
+    searchText = ev.target.value.trim();
+    renderEntries();
+  });
+  document.getElementById("f-mes").addEventListener("change", (ev) => { filters.mes = ev.target.value; renderEntries(); });
+  document.getElementById("f-ano").addEventListener("input", (ev) => { filters.ano = ev.target.value; renderEntries(); });
+  document.getElementById("f-inicio").addEventListener("change", (ev) => { filters.inicio = ev.target.value; renderEntries(); });
+  document.getElementById("f-fim").addEventListener("change", (ev) => { filters.fim = ev.target.value; renderEntries(); });
+  document.getElementById("f-turno").addEventListener("change", (ev) => { filters.turno = ev.target.value; renderEntries(); });
+  document.getElementById("f-personalizados").addEventListener("change", (ev) => { filters.somentePersonalizados = ev.target.checked; renderEntries(); });
+  document.getElementById("btn-clear-filters").addEventListener("click", () => {
+    filters = { mes: "todos", ano: "", inicio: "", fim: "", turno: "todos", somentePersonalizados: false };
+    searchText = "";
+    document.getElementById("search-input").value = "";
+    document.getElementById("f-mes").value = "todos";
+    document.getElementById("f-ano").value = "";
+    document.getElementById("f-inicio").value = "";
+    document.getElementById("f-fim").value = "";
+    document.getElementById("f-turno").value = "todos";
+    document.getElementById("f-personalizados").checked = false;
+    renderEntries();
+  });
+
+  // ---------- calendário ----------
+  let calYear = new Date().getFullYear();
+  let calMonth = new Date().getMonth();
+  let modalDate = null;
+
+  function entriesForDate(dateStr){
+    return state.entries.filter(e => e.date === dateStr);
+  }
+
+  function renderCalendar(){
+    const titleEl = document.getElementById("cal-title");
+    if (!titleEl) return;
+    const first = new Date(calYear, calMonth, 1);
+    titleEl.textContent = first.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+    const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+    const firstWeekday = (first.getDay() + 6) % 7; // 0=Mon..6=Sun
+    const todayStr = new Date().toISOString().slice(0,10);
+
+    const cells = [];
+    for (let i = 0; i < firstWeekday; i++) cells.push(null);
+    for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+
+    const grid = document.getElementById("cal-grid");
+    grid.innerHTML = cells.map(day => {
+      if (day === null) return `<div class="cal-cell empty"></div>`;
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      const dayEntries = entriesForDate(dateStr);
+      const hasEntry = dayEntries.length > 0;
+      const total = dayEntries.reduce((s,e) => s + calcValor(e.date, e.turno, e.custom), 0);
+      const isToday = dateStr === todayStr;
+      const multi = dayEntries.length > 1;
+      return `<div class="cal-cell ${hasEntry ? "has-entry" : ""} ${isToday ? "today" : ""}" data-date="${dateStr}">
+        <span class="cal-day-num">${day}</span>
+        ${hasEntry ? `<span class="cal-value">${fmtBRL(total)}</span>` : ""}
+        ${multi ? `<span class="cal-dot"></span>` : ""}
+      </div>`;
+    }).join("");
+
+    grid.querySelectorAll(".cal-cell:not(.empty)").forEach(cell => {
+      cell.addEventListener("click", () => openDayModal(cell.dataset.date));
+    });
+  }
+
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+  document.getElementById("cal-today").addEventListener("click", () => {
+    const t = new Date();
+    calYear = t.getFullYear(); calMonth = t.getMonth();
+    renderCalendar();
+  });
+
+  function openDayModal(dateStr){
+    modalDate = dateStr;
+    const d = new Date(dateStr + "T00:00:00");
+    document.getElementById("modal-title").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+    document.getElementById("modal-custom").value = "";
+    document.getElementById("modal-turno").value = "Completo";
+    renderModalEntries();
+    document.getElementById("day-modal").classList.add("open");
+  }
+  function closeDayModal(){
+    document.getElementById("day-modal").classList.remove("open");
+    modalDate = null;
+  }
+  document.getElementById("modal-close").addEventListener("click", closeDayModal);
+  document.getElementById("day-modal").addEventListener("click", (ev) => {
+    if (ev.target.id === "day-modal") closeDayModal();
+  });
+
+  function renderModalEntries(){
+    const container = document.getElementById("modal-entries");
+    const dayEntries = entriesForDate(modalDate);
+    if (!dayEntries.length) {
+      container.innerHTML = `<p class="section-sub">Nenhum lançamento neste dia ainda.</p>`;
+      return;
+    }
+    container.innerHTML = dayEntries.map(e => {
+      const valor = calcValor(e.date, e.turno, e.custom);
+      return `<div class="modal-entry" data-id="${e.id}">
+        <span class="chip ${e.turno === "Completo" ? "completo" : "meio"}">${e.turno}</span>
+        <span class="entry-value">${fmtBRL(valor)}</span>
+        <div class="row-actions">
+          <button class="icon-btn modal-del-btn" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
+        </div>
+      </div>`;
+    }).join("");
+    container.querySelectorAll(".modal-del-btn").forEach(btn => {
+      btn.addEventListener("click", async (ev) => {
+        const id = ev.target.closest(".modal-entry").dataset.id;
+        if (!confirm("Excluir este lançamento?")) return;
+        await deleteEntry(id);
+        renderModalEntries();
+      });
+    });
+  }
+
+  document.getElementById("modal-add-btn").addEventListener("click", async () => {
+    if (!modalDate) return;
+    const turno = document.getElementById("modal-turno").value;
+    const custom = document.getElementById("modal-custom").value;
+    await addEntry(modalDate, turno, custom);
+    document.getElementById("modal-custom").value = "";
+    renderModalEntries();
+  });
+
+  // ---------- parâmetros ----------
+  function renderParametros(){
+    document.getElementById("p-meio").value = state.params.meio;
+    document.getElementById("p-semana").value = state.params.completoSemana;
+    document.getElementById("p-fds").value = state.params.completoFDS;
+    document.getElementById("p-ano").value = state.params.ano;
+    document.getElementById("p-meta").value = state.params.meta;
+  }
+  document.getElementById("btn-save-params").addEventListener("click", async () => {
+    state.params = {
+      meio: Number(document.getElementById("p-meio").value) || 0,
+      completoSemana: Number(document.getElementById("p-semana").value) || 0,
+      completoFDS: Number(document.getElementById("p-fds").value) || 0,
+      ano: Number(document.getElementById("p-ano").value) || new Date().getFullYear(),
+      meta: Number(document.getElementById("p-meta").value) || 0
+    };
+    await saveParams();
+    renderResumo();
+    renderEntries();
+    renderCalendar();
+    const msg = document.getElementById("save-msg");
+    msg.classList.add("show");
+    setTimeout(() => msg.classList.remove("show"), 1800);
+  });
+  // ---------- backup: export / import ----------
+  function showBackupMsg(text, isError){
+    const el = document.getElementById("backup-msg");
+    el.textContent = text;
+    el.style.color = isError ? "var(--danger)" : "var(--accent-2)";
+  }
+
+  document.getElementById("btn-export").addEventListener("click", () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      entries: state.entries,
+      params: state.params
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `backup-freelancer-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showBackupMsg("Backup baixado ✓", false);
+  });
+
+  document.getElementById("btn-import").addEventListener("click", () => {
+    document.getElementById("input-import").click();
+  });
+
+  document.getElementById("input-import").addEventListener("change", async (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed.entries) || typeof parsed.params !== "object") {
+        throw new Error("Arquivo não parece um backup válido.");
+      }
+      if (!confirm(`Isso substitui seus dados atuais pelos ${parsed.entries.length} lançamentos deste backup. Continuar?`)) {
+        ev.target.value = "";
+        return;
+      }
+      state.entries = parsed.entries;
+      state.params = { ...DEFAULT_PARAMS, ...parsed.params };
+      const maxId = state.entries.reduce((m, e) => {
+        const n = parseInt(String(e.id).replace(/\D/g,""), 10);
+        return isNaN(n) ? m : Math.max(m, n);
+      }, 0);
+      nextId = maxId + 1;
+      await saveEntries();
+      await saveParams();
+      renderResumo();
+      renderEntries();
+      renderParametros();
+      renderCalendar();
+      showBackupMsg("Backup restaurado ✓", false);
+    } catch (e) {
+      showBackupMsg("Não foi possível importar: " + (e.message || "arquivo inválido."), true);
+    }
+    ev.target.value = "";
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", async () => {
+    if (!confirm("Isso apaga seus lançamentos atuais e restaura os 88 lançamentos originais. Continuar?")) return;
+    state.entries = SEED.map(([date, turno], i) => ({ id: "e" + i, date, turno, custom: null }));
+    nextId = state.entries.length + 1;
+    state.params = { ...DEFAULT_PARAMS };
+    await saveEntries();
+    await saveParams();
+    renderResumo();
+    renderEntries();
+    renderParametros();
+    renderCalendar();
+  });
+
+  // ---------- init ----------
+  (async function init(){
+    await tryAutoConnect();
+  })();
+})();
+</script>
+</body>
+</html>
