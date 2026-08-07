@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg: #0D1017;
@@ -90,8 +91,14 @@
     border-radius: 999px;
     padding: 4px;
     gap: 2px;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
+  .tabs::-webkit-scrollbar{ display:none; }
   .tab{
+    flex-shrink: 0;
+    white-space: nowrap;
     font-family: var(--font-body);
     font-weight: 600;
     font-size: 13px;
@@ -229,6 +236,23 @@
   @media (max-width: 560px){
     .entry-day{ display:none; }
     .top h1{ font-size: 24px; }
+  }
+
+  /* ---------- relatório para exportação em PDF (via impressão do navegador) ---------- */
+  #print-report{ display:none; }
+  #print-report .pr-title{ font-family: var(--font-display); font-size:22px; margin-bottom:2px; }
+  #print-report .pr-sub{ font-size:12px; color:#666; margin-bottom:20px; }
+  #print-report table{ width:100%; border-collapse:collapse; margin-bottom:24px; font-size:12px; }
+  #print-report th, #print-report td{ border:1px solid #ccc; padding:6px 8px; text-align:left; }
+  #print-report th{ background:#f0f0f0; }
+  #print-report .pr-section-title{ font-size:15px; font-weight:700; margin:22px 0 10px; }
+  #print-report .pr-stats{ display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px; }
+  #print-report .pr-stat{ font-size:12.5px; }
+  #print-report .pr-stat b{ display:block; font-size:16px; }
+  @media print{
+    body *{ visibility:hidden; }
+    #print-report, #print-report *{ visibility:visible; }
+    #print-report{ display:block; position:absolute; top:0; left:0; width:100%; color:#000; background:#fff; padding:20px; }
   }
 
   /* ---------- gate screens (connect / login) ---------- */
@@ -377,6 +401,8 @@
       <button class="tab" data-tab="calendario">Calendário</button>
       <button class="tab" data-tab="lancamentos">Lançamentos</button>
       <button class="tab" data-tab="parametros">Parâmetros</button>
+      <button class="tab" data-tab="objetivos">Objetivos</button>
+      <button class="tab" data-tab="config">Config</button>
     </nav>
   </div>
 
@@ -548,20 +574,93 @@
     </div>
 
     <div class="glass card">
-      <h2 class="section-title">Backup</h2>
+      <h2 class="section-title">Backup & Exportação</h2>
       <p class="section-sub">baixe uma cópia dos seus dados de vez em quando — sua rede de segurança se algo der errado na nuvem</p>
       <div class="form-row">
         <button id="btn-export">Exportar backup (.json)</button>
         <button class="secondary" id="btn-import">Importar backup</button>
         <input type="file" id="input-import" accept="application/json" style="display:none;">
       </div>
+      <div class="form-row" style="margin-top:10px;">
+        <button class="secondary" id="btn-export-excel">Exportar Excel (.xlsx)</button>
+        <button class="secondary" id="btn-export-pdf">Exportar PDF</button>
+      </div>
       <p class="params-note" id="backup-msg"></p>
     </div>
 
   </section>
 
+  <!-- ===================== OBJETIVOS ===================== -->
+  <section id="panel-objetivos" class="panel">
+    <div class="glass card">
+      <h2 class="section-title">Objetivos</h2>
+      <p class="section-sub">defina suas metas nos campos abaixo e acompanhe o progresso</p>
+      <div class="form-row">
+        <div class="field"><label for="obj-mensal">Meta mensal (R$)</label><input type="number" id="obj-mensal" step="0.01" min="0"></div>
+        <div class="field"><label for="obj-anual">Meta anual (R$)</label><input type="number" id="obj-anual" step="0.01" min="0"></div>
+        <div class="field"><label for="obj-turnos">Meta de turnos/mês</label><input type="number" id="obj-turnos" step="1" min="0"></div>
+        <div class="field"><label for="obj-dias">Meta de dias trabalhados/mês</label><input type="number" id="obj-dias" step="1" min="0"></div>
+        <button id="btn-save-objetivos">Salvar Objetivos</button>
+        <span class="save-msg" id="obj-save-msg">Salvo ✓</span>
+      </div>
+    </div>
+    <div class="period-grid" id="objetivos-grid"></div>
+  </section>
+
+  <!-- ===================== CONFIGURAÇÕES ===================== -->
+  <section id="panel-config" class="panel">
+    <div class="glass card">
+      <h2 class="section-title">Configurações</h2>
+      <p class="section-sub">preferências gerais do app</p>
+      <div class="form-row" style="margin-bottom:14px;">
+        <div class="field"><label for="cfg-moeda">Moeda</label>
+          <select id="cfg-moeda">
+            <option value="R$">R$ — Real</option>
+            <option value="US$">US$ — Dólar</option>
+            <option value="€">€ — Euro</option>
+            <option value="£">£ — Libra</option>
+          </select>
+        </div>
+        <div class="field"><label for="cfg-idioma">Idioma</label>
+          <select id="cfg-idioma">
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="en" disabled>English (em breve)</option>
+            <option value="es" disabled>Español (em breve)</option>
+          </select>
+        </div>
+        <div class="field"><label for="cfg-tema">Tema</label>
+          <select id="cfg-tema">
+            <option value="escuro">Escuro</option>
+            <option value="claro" disabled>Claro (em breve)</option>
+            <option value="sistema" disabled>Seguir sistema (em breve)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field" style="flex-direction:row; align-items:center; gap:8px; min-width:auto;">
+          <input type="checkbox" id="cfg-hide-default" style="width:16px; height:16px;">
+          <label for="cfg-hide-default" style="text-transform:none; font-size:12.5px;">ocultar valores por padrão ao abrir</label>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:6px;">
+        <div class="field" style="flex-direction:row; align-items:center; gap:8px; min-width:auto;">
+          <input type="checkbox" id="cfg-export-auto" style="width:16px; height:16px;">
+          <label for="cfg-export-auto" style="text-transform:none; font-size:12.5px;">baixar backup automático (1x por semana, ao abrir o app)</label>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:16px;">
+        <button id="btn-save-config">Salvar Configurações</button>
+        <span class="save-msg" id="config-save-msg">Salvo ✓</span>
+      </div>
+      <p class="params-note">Idioma e tema claro estão com a estrutura pronta, mas a troca completa ainda não foi implementada — por enquanto o app continua em português e no tema escuro.</p>
+    </div>
+  </section>
+
 </div>
 </div>
+
+<!-- ===================== RELATÓRIO PARA IMPRESSÃO / PDF ===================== -->
+<div id="print-report"></div>
 
 <!-- ===================== MODAL: DIA DO CALENDÁRIO ===================== -->
 <div class="modal-backdrop" id="day-modal">
@@ -590,7 +689,11 @@
 
   const SEED = []; // Não há mais dados de exemplo aqui - o histórico real vive no Supabase, protegido por login.
 
-  const DEFAULT_PARAMS = { meio: 125, completoSemana: 225, completoFDS: 250, ano: 2026, meta: 2500 };
+  const DEFAULT_PARAMS = {
+    meio: 125, completoSemana: 225, completoFDS: 250, ano: 2026, meta: 2500,
+    metaAnual: 24000, metaTurnos: 20, metaDias: 18,
+    moeda: "R$", idioma: "pt-BR", tema: "escuro", exportAuto: false
+  };
 
   const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const MONTH_SHORT = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -612,8 +715,9 @@
   const ICON_EYE_OFF = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61C3.35 8.36 1 12 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>`;
 
   function fmtBRL(n){
-    if (hideValues) return "R$ ••••••";
-    return "R$ " + (Math.round(n*100)/100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const symbol = (state.params && state.params.moeda) || "R$";
+    if (hideValues) return symbol + " ••••••";
+    return symbol + " " + (Math.round(n*100)/100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function calcValor(dateStr, turno, custom){
@@ -756,6 +860,20 @@
     return { maiorGanhoDia, menorGanhoDia, maiorSequencia, maiorIntervalo, qtdSextas, qtdSabados, mediaSemanal, mediaMensal };
   }
 
+  // ---------- ano civil atual (para Meta Anual em Objetivos) ----------
+  function computeAnnualStats(){
+    const year = new Date().getFullYear();
+    let ganhoAno = 0, turnosAno = 0;
+    state.entries.forEach(e => {
+      const d = new Date(e.date + "T00:00:00");
+      if (d.getFullYear() === year) {
+        ganhoAno += calcValor(e.date, e.turno, e.custom);
+        turnosAno += 1;
+      }
+    });
+    return { year, ganhoAno, turnosAno };
+  }
+
   // ---------- filtros globais (Lançamentos: lista + busca) ----------
   let filters = { mes: "todos", ano: "", inicio: "", fim: "", turno: "todos", somentePersonalizados: false };
   let searchText = "";
@@ -888,6 +1006,7 @@
     renderResumo();
     renderEntries();
     renderCalendar();
+    renderConfig();
   });
 
   async function startApp(){
@@ -901,6 +1020,9 @@
     renderEntries();
     renderParametros();
     renderCalendar();
+    renderObjetivos();
+    renderConfig();
+    checkAutoExport();
   }
 
   // ---------- storage (Supabase, scoped to the logged-in user via RLS) ----------
@@ -918,7 +1040,7 @@
       await saveEntries();
     }
     if (paramsRow) {
-      state.params = paramsRow.value;
+      state.params = { ...DEFAULT_PARAMS, ...paramsRow.value };
     } else {
       state.params = { ...DEFAULT_PARAMS };
       await saveParams();
@@ -1214,6 +1336,96 @@
     `).join("");
   }
 
+  // ---------- objetivos ----------
+  function renderObjetivos(){
+    const inputMensal = document.getElementById("obj-mensal");
+    if (!inputMensal) return;
+    inputMensal.value = state.params.meta;
+    document.getElementById("obj-anual").value = state.params.metaAnual;
+    document.getElementById("obj-turnos").value = state.params.metaTurnos;
+    document.getElementById("obj-dias").value = state.params.metaDias;
+
+    const p = computeCurrentPeriod();
+    const a = computeAnnualStats();
+
+    const bar = (label, atual, meta, sub) => {
+      const pct = meta > 0 ? Math.min(atual / meta, 1) : 0;
+      return `
+        <div class="glass period-card">
+          <div class="label">${label}</div>
+          <div class="value">${sub}</div>
+          <div class="sub">${meta > 0 ? Math.round(pct*100) + "% da meta" : "defina uma meta"}</div>
+          <div class="progress-track"><div class="progress-fill ${pct >= 1 ? "over" : ""}" style="width:${pct*100}%;"></div></div>
+        </div>`;
+    };
+
+    document.getElementById("objetivos-grid").innerHTML =
+      bar("Meta Mensal", p.ganhoMes, state.params.meta, `${fmtBRL(p.ganhoMes)} / ${fmtBRL(state.params.meta)}`) +
+      bar("Meta Anual", a.ganhoAno, state.params.metaAnual, `${fmtBRL(a.ganhoAno)} / ${fmtBRL(state.params.metaAnual)}`) +
+      bar("Meta de Turnos (mês)", p.turnosMes, state.params.metaTurnos, `${p.turnosMes} / ${state.params.metaTurnos} turnos`) +
+      bar("Meta de Dias Trabalhados (mês)", p.diasTrabalhadosMes, state.params.metaDias, `${p.diasTrabalhadosMes} / ${state.params.metaDias} dias`);
+  }
+
+  document.getElementById("btn-save-objetivos").addEventListener("click", async () => {
+    state.params = {
+      ...state.params,
+      meta: Number(document.getElementById("obj-mensal").value) || 0,
+      metaAnual: Number(document.getElementById("obj-anual").value) || 0,
+      metaTurnos: Number(document.getElementById("obj-turnos").value) || 0,
+      metaDias: Number(document.getElementById("obj-dias").value) || 0
+    };
+    await saveParams();
+    renderObjetivos();
+    renderResumo();
+    renderParametros();
+    const msg = document.getElementById("obj-save-msg");
+    msg.classList.add("show");
+    setTimeout(() => msg.classList.remove("show"), 1800);
+  });
+
+  // ---------- configurações ----------
+  function renderConfig(){
+    const el = document.getElementById("cfg-moeda");
+    if (!el) return;
+    document.getElementById("cfg-moeda").value = state.params.moeda;
+    document.getElementById("cfg-idioma").value = state.params.idioma;
+    document.getElementById("cfg-tema").value = state.params.tema;
+    document.getElementById("cfg-hide-default").checked = hideValues;
+    document.getElementById("cfg-export-auto").checked = !!state.params.exportAuto;
+  }
+
+  document.getElementById("btn-save-config").addEventListener("click", async () => {
+    state.params = {
+      ...state.params,
+      moeda: document.getElementById("cfg-moeda").value,
+      idioma: document.getElementById("cfg-idioma").value,
+      tema: document.getElementById("cfg-tema").value,
+      exportAuto: document.getElementById("cfg-export-auto").checked
+    };
+    hideValues = document.getElementById("cfg-hide-default").checked;
+    localStorage.setItem(LS_HIDE, hideValues ? "1" : "0");
+    updatePrivacyIcon();
+    await saveParams();
+    renderResumo();
+    renderEntries();
+    renderCalendar();
+    renderObjetivos();
+    const msg = document.getElementById("config-save-msg");
+    msg.classList.add("show");
+    setTimeout(() => msg.classList.remove("show"), 1800);
+  });
+
+  // ---------- backup automático (1x/semana, se ativado nas Configurações) ----------
+  async function checkAutoExport(){
+    if (!state.params.exportAuto) return;
+    const LS_AUTOEXPORT = "freelancer_last_autoexport";
+    const last = localStorage.getItem(LS_AUTOEXPORT);
+    const now = Date.now();
+    if (last && (now - Number(last)) < 7 * 24 * 60 * 60 * 1000) return;
+    exportBackupJson();
+    localStorage.setItem(LS_AUTOEXPORT, String(now));
+  }
+
   // ---------- entries: shared CRUD helpers (used by Lançamentos tab AND Calendário modal) ----------
   const ICON_EDIT = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
   const ICON_TRASH = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
@@ -1229,6 +1441,7 @@
     renderEntries();
     renderResumo();
     renderCalendar();
+    renderObjetivos();
   }
   async function updateEntry(id, date, turno, custom){
     const entry = state.entries.find(x => x.id === id);
@@ -1240,6 +1453,7 @@
     renderEntries();
     renderResumo();
     renderCalendar();
+    renderObjetivos();
   }
   async function deleteEntry(id){
     state.entries = state.entries.filter(x => x.id !== id);
@@ -1247,6 +1461,7 @@
     renderEntries();
     renderResumo();
     renderCalendar();
+    renderObjetivos();
   }
 
   function dowName(dateStr){
@@ -1491,6 +1706,7 @@
   }
   document.getElementById("btn-save-params").addEventListener("click", async () => {
     state.params = {
+      ...state.params,
       meio: Number(document.getElementById("p-meio").value) || 0,
       completoSemana: Number(document.getElementById("p-semana").value) || 0,
       completoFDS: Number(document.getElementById("p-fds").value) || 0,
@@ -1501,6 +1717,7 @@
     renderResumo();
     renderEntries();
     renderCalendar();
+    renderObjetivos();
     const msg = document.getElementById("save-msg");
     msg.classList.add("show");
     setTimeout(() => msg.classList.remove("show"), 1800);
@@ -1512,7 +1729,7 @@
     el.style.color = isError ? "var(--danger)" : "var(--accent-2)";
   }
 
-  document.getElementById("btn-export").addEventListener("click", () => {
+  function exportBackupJson(){
     const payload = {
       exportedAt: new Date().toISOString(),
       entries: state.entries,
@@ -1528,6 +1745,10 @@
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  }
+
+  document.getElementById("btn-export").addEventListener("click", () => {
+    exportBackupJson();
     showBackupMsg("Backup baixado ✓", false);
   });
 
@@ -1561,11 +1782,93 @@
       renderEntries();
       renderParametros();
       renderCalendar();
+      renderObjetivos();
+      renderConfig();
       showBackupMsg("Backup restaurado ✓", false);
     } catch (e) {
       showBackupMsg("Não foi possível importar: " + (e.message || "arquivo inválido."), true);
     }
     ev.target.value = "";
+  });
+
+  // ---------- exportar Excel (.xlsx) ----------
+  document.getElementById("btn-export-excel").addEventListener("click", () => {
+    if (typeof XLSX === "undefined") {
+      showBackupMsg("Não consegui carregar a biblioteca de Excel — verifique sua conexão e tente de novo.", true);
+      return;
+    }
+    const sorted = [...state.entries].sort((a,b) => a.date.localeCompare(b.date));
+    const rows = sorted.map(e => ({
+      "Data": e.date.split("-").reverse().join("/"),
+      "Dia da Semana": dowName(e.date),
+      "Turno": e.turno,
+      "Valor (R$)": calcValor(e.date, e.turno, e.custom),
+      "Personalizado": (e.custom !== null && e.custom !== undefined && e.custom !== "") ? "Sim" : "Não"
+    }));
+    const wsEntries = XLSX.utils.json_to_sheet(rows);
+
+    const s = computeStats();
+    const resumoRows = [
+      { "Indicador": "Total Ganho", "Valor": s.total },
+      { "Indicador": "Dias Trabalhados", "Valor": s.dias },
+      { "Indicador": "Média por Dia", "Valor": Math.round(s.media*100)/100 },
+      { "Indicador": "Dias Completo", "Valor": s.diasCompleto },
+      { "Indicador": "Dias Meio", "Valor": s.diasMeio },
+      {},
+      { "Indicador": "Mês", "Valor": "Ganho (R$)" },
+      ...s.monthly.map((m,i) => ({ "Indicador": MONTH_NAMES[i], "Valor": m.ganho }))
+    ];
+    const wsResumo = XLSX.utils.json_to_sheet(resumoRows, { skipHeader: true });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+    XLSX.utils.book_append_sheet(wb, wsEntries, "Lançamentos");
+    const stamp = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `freelancer-${stamp}.xlsx`);
+    showBackupMsg("Excel baixado ✓", false);
+  });
+
+  // ---------- exportar PDF (via impressão do navegador) ----------
+  document.getElementById("btn-export-pdf").addEventListener("click", () => {
+    const s = computeStats();
+    const st = computeExtraStats();
+    const today = new Date();
+    const sorted = [...state.entries].sort((a,b) => b.date.localeCompare(a.date));
+
+    const monthlyRows = s.monthly.map((m,i) => `<tr><td>${MONTH_NAMES[i]}</td><td>${fmtBRL(m.ganho)}</td><td>${m.dias}</td></tr>`).join("");
+    const entryRows = sorted.map(e => {
+      const valor = calcValor(e.date, e.turno, e.custom);
+      return `<tr><td>${e.date.split("-").reverse().join("/")}</td><td>${e.turno}</td><td>${fmtBRL(valor)}</td></tr>`;
+    }).join("");
+
+    document.getElementById("print-report").innerHTML = `
+      <div class="pr-title">Relatório — Painel de Ganhos Freelancer</div>
+      <div class="pr-sub">Gerado em ${today.toLocaleDateString("pt-BR")} às ${today.toLocaleTimeString("pt-BR")}</div>
+
+      <div class="pr-section-title">Resumo</div>
+      <div class="pr-stats">
+        <div class="pr-stat"><b>${fmtBRL(s.total)}</b>Total Ganho</div>
+        <div class="pr-stat"><b>${s.dias}</b>Dias Trabalhados</div>
+        <div class="pr-stat"><b>${fmtBRL(s.media)}</b>Média por Dia</div>
+        <div class="pr-stat"><b>${s.diasCompleto}</b>Dias Completo</div>
+        <div class="pr-stat"><b>${s.diasMeio}</b>Dias Meio</div>
+      </div>
+
+      <div class="pr-section-title">Estatísticas</div>
+      <div class="pr-stats">
+        <div class="pr-stat"><b>${fmtBRL(st.maiorGanhoDia)}</b>Maior ganho/dia</div>
+        <div class="pr-stat"><b>${fmtBRL(st.menorGanhoDia)}</b>Menor ganho/dia</div>
+        <div class="pr-stat"><b>${st.maiorSequencia}</b>Maior sequência</div>
+        <div class="pr-stat"><b>${st.maiorIntervalo}</b>Maior intervalo sem trabalhar</div>
+      </div>
+
+      <div class="pr-section-title">Resumo Mensal</div>
+      <table><thead><tr><th>Mês</th><th>Ganho</th><th>Dias</th></tr></thead><tbody>${monthlyRows}</tbody></table>
+
+      <div class="pr-section-title">Lançamentos (${sorted.length})</div>
+      <table><thead><tr><th>Data</th><th>Turno</th><th>Valor</th></tr></thead><tbody>${entryRows}</tbody></table>
+    `;
+    window.print();
   });
 
   // ---------- init ----------
