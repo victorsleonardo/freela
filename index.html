@@ -57,6 +57,12 @@
   html[data-theme="claro"] body::after{ opacity:.5; }
   html[data-theme="claro"] .tab.active{ color:#fff; }
   *{ box-sizing: border-box; }
+  /* Acessibilidade: foco visível para navegação por teclado */
+  :focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
   html, body{ height: 100%; }
   body{
     margin:0;
@@ -461,7 +467,7 @@
     <p class="gate-sub">Cole a URL e a chave "anon public" do seu projeto Supabase (Configurações → API). Isso é feito uma vez por navegador/aparelho.</p>
     <div class="field"><label for="cfg-url">Project URL</label><input type="text" id="cfg-url" placeholder="https://xxxxx.supabase.co"></div>
     <div class="field"><label for="cfg-key">Anon public key</label><input type="text" id="cfg-key" placeholder="eyJhbGciOi..."></div>
-    <button id="btn-connect">Conectar</button>
+    <button type="button" id="btn-connect">Conectar</button>
     <div class="gate-error" id="connect-error"></div>
   </div>
 </div>
@@ -471,9 +477,9 @@
   <div class="glass gate-card">
     <h1 id="auth-title">Entrar</h1>
     <p class="gate-sub">Use o mesmo e-mail e senha no computador e no celular para sincronizar os dados.</p>
-    <div class="field"><label for="auth-email">E-mail</label><input type="email" id="auth-email" placeholder="voce@email.com"></div>
-    <div class="field"><label for="auth-pass">Senha</label><input type="password" id="auth-pass" placeholder="mínimo 6 caracteres"></div>
-    <button id="btn-auth-submit">Entrar</button>
+    <div class="field"><label for="auth-email">E-mail</label><input type="email" id="auth-email" placeholder="voce@email.com" autocomplete="email" inputmode="email"></div>
+    <div class="field"><label for="auth-pass">Senha</label><input type="password" id="auth-pass" placeholder="mínimo 6 caracteres" autocomplete="current-password"></div>
+    <button type="button" id="btn-auth-submit">Entrar</button>
     <div class="gate-error" id="auth-error"></div>
     <div class="gate-switch">
       <span id="auth-switch-text">Ainda não tem conta?</span> <a id="auth-switch-link">Criar conta</a>
@@ -488,25 +494,25 @@
 
   <div class="top">
     <div>
-      <p class="eyebrow">Freelancer · Turnos & Ganhos</p>
+      <p class="eyebrow">Freelancer · Turnos &amp; Ganhos</p>
       <h1>Painel de Ganhos</h1>
     </div>
     <div class="topbar-account">
       <span id="sync-indicator"><span class="dot"></span>sincronizando</span>
-      <button class="icon-btn" id="btn-toggle-privacy" title="Mostrar/ocultar valores" aria-label="Mostrar/ocultar valores"></button>
+      <button type="button" class="icon-btn" id="btn-toggle-privacy" title="Mostrar/ocultar valores" aria-label="Mostrar/ocultar valores"></button>
       <span id="account-email"></span>
-      <button class="secondary" id="btn-logout">Sair</button>
+      <button type="button" class="secondary" id="btn-logout">Sair</button>
     </div>
   </div>
 
   <div class="top" style="margin-top:-14px;">
-    <nav class="tabs">
-      <button class="tab active" data-tab="resumo">Resumo</button>
-      <button class="tab" data-tab="calendario">Calendário</button>
-      <button class="tab" data-tab="lancamentos">Lançamentos</button>
-      <button class="tab" data-tab="parametros">Parâmetros</button>
-      <button class="tab" data-tab="objetivos">Objetivos</button>
-      <button class="tab" data-tab="config">Config</button>
+    <nav class="tabs" aria-label="Seções do painel">
+      <button type="button" class="tab active" data-tab="resumo">Resumo</button>
+      <button type="button" class="tab" data-tab="calendario">Calendário</button>
+      <button type="button" class="tab" data-tab="lancamentos">Lançamentos</button>
+      <button type="button" class="tab" data-tab="parametros">Parâmetros</button>
+      <button type="button" class="tab" data-tab="objetivos">Objetivos</button>
+      <button type="button" class="tab" data-tab="config">Config</button>
     </nav>
   </div>
 
@@ -590,9 +596,9 @@
   <section id="panel-calendario" class="panel">
     <div class="glass card">
       <div class="cal-nav">
-        <div class="cal-nav-btns"><button class="secondary" id="cal-prev">‹</button></div>
+        <div class="cal-nav-btns"><button type="button" class="secondary" id="cal-prev">‹</button></div>
         <div class="cal-title" id="cal-title"></div>
-        <div class="cal-nav-btns"><button class="secondary" id="cal-next">›</button><button class="secondary" id="cal-today">Hoje</button></div>
+        <div class="cal-nav-btns"><button type="button" class="secondary" id="cal-next">›</button><button type="button" class="secondary" id="cal-today">Hoje</button></div>
       </div>
       <div class="cal-weekdays"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
       <div class="cal-grid" id="cal-grid"></div>
@@ -610,12 +616,12 @@
           <select id="in-turno"><option value="Completo">Completo</option><option value="Meio">Meio</option></select>
         </div>
         <div class="field"><label for="in-custom">Valor personalizado</label><input type="number" id="in-custom" placeholder="opcional" step="0.01" min="0"></div>
-        <button id="btn-add">Adicionar</button>
+        <button type="button" id="btn-add">Adicionar</button>
       </div>
     </div>
 
     <div class="glass card">
-      <h2 class="section-title">Filtros & Busca</h2>
+      <h2 class="section-title">Filtros &amp; Busca</h2>
       <p class="section-sub">refine a lista abaixo</p>
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -641,7 +647,7 @@
           <input type="checkbox" id="f-personalizados" style="width:16px; height:16px;">
           <label for="f-personalizados" style="text-transform:none; font-size:12.5px;">só personalizados</label>
         </div>
-        <button class="secondary" id="btn-clear-filters">Limpar filtros</button>
+        <button type="button" class="secondary" id="btn-clear-filters">Limpar filtros</button>
       </div>
       <p class="filter-result" id="filter-result"></p>
     </div>
@@ -669,7 +675,7 @@
       <div class="form-row">
         <div class="field"><label for="p-ano">Ano de referência</label><input type="number" id="p-ano" step="1"></div>
         <div class="field"><label for="p-meta">Meta mensal (R$)</label><input type="number" id="p-meta" step="0.01" min="0"></div>
-        <button id="btn-save-params">Salvar</button>
+        <button type="button" id="btn-save-params">Salvar</button>
         <span class="save-msg" id="save-msg">Salvo ✓</span>
       </div>
       <p class="params-note">
@@ -691,7 +697,7 @@
         <div class="field"><label for="obj-anual">Meta anual (R$)</label><input type="number" id="obj-anual" step="0.01" min="0"></div>
         <div class="field"><label for="obj-turnos">Meta de turnos/mês</label><input type="number" id="obj-turnos" step="1" min="0"></div>
         <div class="field"><label for="obj-dias">Meta de dias trabalhados/mês</label><input type="number" id="obj-dias" step="1" min="0"></div>
-        <button id="btn-save-objetivos">Salvar Objetivos</button>
+        <button type="button" id="btn-save-objetivos">Salvar Objetivos</button>
         <span class="save-msg" id="obj-save-msg">Salvo ✓</span>
       </div>
     </div>
@@ -701,16 +707,16 @@
   <!-- ===================== CONFIGURAÇÕES ===================== -->
   <section id="panel-config" class="panel">
     <div class="glass card">
-      <h2 class="section-title">Backup & Exportação</h2>
+      <h2 class="section-title">Backup &amp; Exportação</h2>
       <p class="section-sub">baixe uma cópia dos seus dados de vez em quando — sua rede de segurança se algo der errado na nuvem</p>
       <div class="form-row">
-        <button id="btn-export">Exportar backup (.json)</button>
-        <button class="secondary" id="btn-import">Importar backup</button>
+        <button type="button" id="btn-export">Exportar backup (.json)</button>
+        <button type="button" class="secondary" id="btn-import">Importar backup</button>
         <input type="file" id="input-import" accept="application/json" style="display:none;">
       </div>
       <div class="form-row" style="margin-top:10px;">
-        <button class="secondary" id="btn-export-excel">Exportar Excel (.xlsx)</button>
-        <button class="secondary" id="btn-export-pdf">Exportar PDF</button>
+        <button type="button" class="secondary" id="btn-export-excel">Exportar Excel (.xlsx)</button>
+        <button type="button" class="secondary" id="btn-export-pdf">Exportar PDF</button>
       </div>
       <p class="params-note" id="backup-msg"></p>
     </div>
@@ -755,7 +761,7 @@
         </div>
       </div>
       <div class="form-row" style="margin-top:16px;">
-        <button id="btn-save-config">Salvar Configurações</button>
+        <button type="button" id="btn-save-config">Salvar Configurações</button>
         <span class="save-msg" id="config-save-msg">Salvo ✓</span>
       </div>
       <p class="params-note">Tema claro/escuro/sistema já funcionam de verdade. Idioma ainda tem só a estrutura pronta — o app continua em português por enquanto.</p>
@@ -765,25 +771,25 @@
 </div>
 
 <!-- FAB e barra inferior (mobile) — só aparecem quando logado -->
-<button id="fab-add" aria-label="Adicionar lançamento">+</button>
-<nav id="bottom-nav">
-  <button class="bn-tab active" data-tab="resumo">
+<button type="button" id="fab-add" aria-label="Adicionar lançamento">+</button>
+<nav id="bottom-nav" aria-label="Navegação principal">
+  <button type="button" class="bn-tab active" data-tab="resumo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     Resumo
   </button>
-  <button class="bn-tab" data-tab="calendario">
+  <button type="button" class="bn-tab" data-tab="calendario">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
     Calendário
   </button>
-  <button class="bn-tab" data-tab="lancamentos">
+  <button type="button" class="bn-tab" data-tab="lancamentos">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     Lista
   </button>
-  <button class="bn-tab" data-tab="objetivos">
+  <button type="button" class="bn-tab" data-tab="objetivos">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
     Metas
   </button>
-  <button class="bn-tab" data-tab="config">
+  <button type="button" class="bn-tab" data-tab="config">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
     Config
   </button>
@@ -797,10 +803,10 @@
 <div id="print-report"></div>
 
 <!-- ===================== MODAL: DIA DO CALENDÁRIO ===================== -->
-<div class="modal-backdrop" id="day-modal">
+<div class="modal-backdrop" id="day-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="glass modal-box">
-    <button class="modal-close" id="modal-close" aria-label="Fechar">&times;</button>
-    <h3 id="modal-title"></h3>
+    <button type="button" class="modal-close" id="modal-close" aria-label="Fechar">&times;</button>
+    <h3 id="modal-title">Lançamentos do dia</h3>
     <div id="modal-entries"></div>
     <div class="modal-add-form">
       <div class="form-row">
@@ -808,7 +814,7 @@
           <select id="modal-turno"><option value="Completo">Completo</option><option value="Meio">Meio</option></select>
         </div>
         <div class="field"><label for="modal-custom">Valor personalizado</label><input type="number" id="modal-custom" placeholder="opcional" step="0.01" min="0"></div>
-        <button id="modal-add-btn">+ Adicionar</button>
+        <button type="button" id="modal-add-btn">+ Adicionar</button>
       </div>
     </div>
   </div>
@@ -844,6 +850,37 @@
   let sb = null;
   let session = null;
   let hideValues = localStorage.getItem(LS_HIDE) === "1";
+
+  let loadFailed = false;
+
+  // ---------- data local (SEM bug de fuso) ----------
+  // new Date().toISOString() devolve a data em UTC. No Brasil (UTC-3), depois
+  // das 21h isso já aponta para o dia seguinte — o "hoje" do calendário e do
+  // botão + ficavam no dia errado. Estas funções usam sempre a data local.
+  function toLocalISO(d){
+    return d.getFullYear() + "-" +
+           String(d.getMonth()+1).padStart(2,"0") + "-" +
+           String(d.getDate()).padStart(2,"0");
+  }
+  function todayISO(){ return toLocalISO(new Date()); }
+
+  // ---------- cache local (torna verdadeira a promessa de offline) ----------
+  function saveLocalCache(){
+    try {
+      localStorage.setItem(KEY_ENTRIES, JSON.stringify(state.entries));
+      localStorage.setItem(KEY_PARAMS, JSON.stringify(state.params));
+    } catch (e) { /* cota cheia ou modo privado: segue sem cache */ }
+  }
+  function loadLocalCache(){
+    try {
+      const rawE = localStorage.getItem(KEY_ENTRIES);
+      const rawP = localStorage.getItem(KEY_PARAMS);
+      if (!rawE) return null;
+      const entries = JSON.parse(rawE);
+      if (!Array.isArray(entries)) return null;
+      return { entries, params: rawP ? JSON.parse(rawP) : {} };
+    } catch (e) { return null; }
+  }
 
   const ICON_EYE = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`;
   const ICON_EYE_OFF = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61C3.35 8.36 1 12 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>`;
@@ -984,7 +1021,7 @@
       const dt = new Date(d + "T00:00:00");
       const mIdx = (dt.getDay() + 6) % 7;
       const monday = new Date(dt); monday.setDate(dt.getDate() - mIdx);
-      weekKeys.add(monday.toISOString().slice(0,10));
+      weekKeys.add(toLocalISO(monday));
       monthKeys.add(dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0"));
     });
     const total = values.reduce((a,b) => a+b, 0);
@@ -1113,6 +1150,17 @@
     }
   });
 
+  ["auth-email","auth-pass"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") document.getElementById("btn-auth-submit").click();
+    });
+  });
+  ["cfg-url","cfg-key"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") document.getElementById("btn-connect").click();
+    });
+  });
+
   document.getElementById("btn-logout").addEventListener("click", async () => {
     if (!confirm("Sair da conta?")) return;
     await sb.auth.signOut();
@@ -1152,7 +1200,19 @@
     applyTheme();
     updateOfflineBanner();
     showSkeletons();
-    await loadData();
+    try {
+      await loadData();
+    } catch (e) {
+      // Sem dados da nuvem e sem cache local: não renderiza estado vazio como
+      // se fosse a verdade, para nunca gravar vazio por cima do histórico.
+      document.getElementById("stat-grid").innerHTML =
+        `<div class="glass stat-card hero"><div class="label">Erro ao carregar</div>` +
+        `<div class="value" style="font-size:15px;">Não consegui ler seus dados. ` +
+        `Confira a conexão e recarregue a página.</div></div>`;
+      document.getElementById("entries-list").innerHTML = "";
+      showToast(friendlyErrorMessage(e), { duration: 8000 });
+      return;
+    }
     renderResumo();
     renderEntries();
     renderParametros();
@@ -1174,23 +1234,47 @@
   // ---------- storage (Supabase, scoped to the logged-in user via RLS) ----------
   async function loadData(){
     const { data, error } = await sb.from("freelancer_data").select("key,value");
-    if (error) { console.error(error); }
+
+    // CRÍTICO: se a leitura falhar, NUNCA seguir em frente com estado vazio.
+    // Antes, um erro de rede fazia o app "achar" que não havia dados e gravar
+    // um array vazio por cima do histórico real na nuvem (perda total).
+    if (error) {
+      console.error("Falha ao carregar dados:", error);
+      const cached = loadLocalCache();
+      if (cached) {
+        state.entries = cached.entries;
+        state.params = { ...DEFAULT_PARAMS, ...cached.params };
+        recalcNextId();
+        loadFailed = true;
+        showToast("Não consegui ler a nuvem — usando a cópia deste aparelho.", { duration: 6000 });
+        return;
+      }
+      loadFailed = true;
+      throw new Error("Não foi possível carregar seus dados da nuvem.");
+    }
+
     const rows = data || [];
     const entriesRow = rows.find(r => r.key === "entries");
     const paramsRow = rows.find(r => r.key === "params");
 
-    if (entriesRow) {
+    // Só trata como "conta nova" quando a leitura deu certo E realmente não há linha.
+    if (entriesRow && Array.isArray(entriesRow.value)) {
       state.entries = entriesRow.value;
     } else {
       state.entries = SEED.map(([date, turno], i) => ({ id: "e" + i, date, turno, custom: null }));
       await saveEntries();
     }
-    if (paramsRow) {
+    if (paramsRow && paramsRow.value && typeof paramsRow.value === "object") {
       state.params = { ...DEFAULT_PARAMS, ...paramsRow.value };
     } else {
       state.params = { ...DEFAULT_PARAMS };
       await saveParams();
     }
+    recalcNextId();
+    saveLocalCache();
+  }
+
+  function recalcNextId(){
     const maxId = state.entries.reduce((m, e) => {
       const n = parseInt(String(e.id).replace(/\D/g,""), 10);
       return isNaN(n) ? m : Math.max(m, n);
@@ -1680,6 +1764,7 @@
 
   const _saveEntries = saveEntries, _saveParams = saveParams;
   saveEntries = async function(){
+    saveLocalCache(); // grava no aparelho ANTES da rede: offline não perde nada
     syncStart();
     try {
       await _saveEntries();
@@ -1692,6 +1777,7 @@
     } finally { syncEnd(); }
   };
   saveParams = async function(){
+    saveLocalCache(); // grava no aparelho ANTES da rede: offline não perde nada
     syncStart();
     try {
       await _saveParams();
@@ -1727,9 +1813,18 @@
     renderObjetivos();
   }
 
+  function newEntryId(){
+    // Antes: "e" + contador sequencial. Dois aparelhos offline geravam o MESMO
+    // id (ex.: "e42"), e editar/excluir acertava o lançamento errado.
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return "e" + window.crypto.randomUUID();
+    }
+    return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
   async function addEntry(date, turno, custom){
     state.entries.push({
-      id: "e" + (nextId++),
+      id: newEntryId(),
       date,
       turno,
       custom: (custom === "" || custom === null || custom === undefined) ? null : Number(custom)
@@ -1817,8 +1912,8 @@
               </select>
             </div>
             <div class="field"><label>Valor personalizado</label><input type="number" step="0.01" class="edit-custom" value="${e.custom ?? ""}" placeholder="auto"></div>
-            <button class="btn-save-row">Salvar</button>
-            <button class="secondary btn-cancel-row">Cancelar</button>
+            <button type="button" class="btn-save-row">Salvar</button>
+            <button type="button" class="secondary btn-cancel-row">Cancelar</button>
           </div>
         </div>`;
       }
@@ -1831,8 +1926,8 @@
         <span class="chip ${e.turno === "Completo" ? "completo" : "meio"}">${e.turno}${weekend ? " · fds" : ""}</span>
         <span class="entry-value">${fmtBRL(valor)}${hasCustom ? '<span class="entry-custom-tag">personalizado</span>' : ""}</span>
         <div class="row-actions">
-          <button class="icon-btn btn-edit-row" title="Editar" aria-label="Editar">${ICON_EDIT}</button>
-          <button class="icon-btn btn-del-row" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
+          <button type="button" class="icon-btn btn-edit-row" title="Editar" aria-label="Editar">${ICON_EDIT}</button>
+          <button type="button" class="icon-btn btn-del-row" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
         </div>
       </div>`;
     }).join("");
@@ -1915,7 +2010,7 @@
 
     const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
     const firstWeekday = (first.getDay() + 6) % 7; // 0=Mon..6=Sun
-    const todayStr = new Date().toISOString().slice(0,10);
+    const todayStr = todayISO();
 
     const cells = [];
     for (let i = 0; i < firstWeekday; i++) cells.push(null);
@@ -1971,10 +2066,15 @@
   }
 
   document.getElementById("fab-add").addEventListener("click", () => {
-    const todayStr = new Date().toISOString().slice(0,10);
+    const todayStr = todayISO();
     openDayModal(todayStr);
   });
   document.getElementById("modal-close").addEventListener("click", closeDayModal);
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && document.getElementById("day-modal").classList.contains("open")) {
+      closeDayModal();
+    }
+  });
   document.getElementById("day-modal").addEventListener("click", (ev) => {
     if (ev.target.id === "day-modal") closeDayModal();
   });
@@ -1992,7 +2092,7 @@
         <span class="chip ${e.turno === "Completo" ? "completo" : "meio"}">${e.turno}</span>
         <span class="entry-value">${fmtBRL(valor)}</span>
         <div class="row-actions">
-          <button class="icon-btn modal-del-btn" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
+          <button type="button" class="icon-btn modal-del-btn" title="Excluir" aria-label="Excluir">${ICON_TRASH}</button>
         </div>
       </div>`;
     }).join("");
@@ -2056,7 +2156,7 @@
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const stamp = new Date().toISOString().slice(0,10);
+    const stamp = todayISO();
     a.href = url;
     a.download = `backup-freelancer-${stamp}.json`;
     document.body.appendChild(a);
@@ -2087,13 +2187,23 @@
         ev.target.value = "";
         return;
       }
-      state.entries = parsed.entries;
+      // Saneamento: o conteúdo do arquivo vai parar em innerHTML na listagem.
+      // Sem isso, um .json adulterado poderia injetar HTML/script na página.
+      const TURNOS_VALIDOS = ["Completo", "Meio"];
+      const limpos = parsed.entries
+        .filter(e => e && typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date))
+        .map(e => ({
+          id: (typeof e.id === "string" && e.id) ? e.id.replace(/[^\w-]/g, "") : newEntryId(),
+          date: e.date,
+          turno: TURNOS_VALIDOS.includes(e.turno) ? e.turno : "Completo",
+          custom: (e.custom === null || e.custom === undefined || e.custom === "" || isNaN(Number(e.custom)))
+            ? null : Number(e.custom)
+        }));
+      const descartados = parsed.entries.length - limpos.length;
+
+      state.entries = limpos;
       state.params = { ...DEFAULT_PARAMS, ...parsed.params };
-      const maxId = state.entries.reduce((m, e) => {
-        const n = parseInt(String(e.id).replace(/\D/g,""), 10);
-        return isNaN(n) ? m : Math.max(m, n);
-      }, 0);
-      nextId = maxId + 1;
+      recalcNextId();
       await saveEntries();
       await saveParams();
       renderResumo();
@@ -2103,7 +2213,12 @@
       renderObjetivos();
       renderConfig();
       applyTheme();
-      showBackupMsg("Backup restaurado ✓", false);
+      showBackupMsg(
+        descartados > 0
+          ? `Backup restaurado ✓ (${descartados} registro(s) inválido(s) foram ignorados)`
+          : "Backup restaurado ✓",
+        false
+      );
     } catch (e) {
       showBackupMsg("Não foi possível importar: " + (e.message || "arquivo inválido."), true);
     }
@@ -2142,7 +2257,7 @@
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
     XLSX.utils.book_append_sheet(wb, wsEntries, "Lançamentos");
-    const stamp = new Date().toISOString().slice(0,10);
+    const stamp = todayISO();
     XLSX.writeFile(wb, `freelancer-${stamp}.xlsx`);
     showBackupMsg("Excel baixado ✓", false);
   });
