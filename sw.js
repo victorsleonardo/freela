@@ -12,7 +12,7 @@
  *  - navegação usa network-first (pega deploy novo) com fallback para o cache.
  * ========================================================================== */
 
-const VERSION = 'v3.0.1';
+const VERSION = 'v3.1.0';
 const SHELL_CACHE = `painel-shell-${VERSION}`;
 const RUNTIME_CACHE = `painel-runtime-${VERSION}`;
 
@@ -31,6 +31,7 @@ const SHELL = [
   './assets/js/state.js',
   './assets/js/db.js',
   './assets/js/export.js',
+  './assets/js/xlsx-report.js',
   './assets/js/ui/dom.js',
   './assets/js/ui/toast.js',
   './assets/js/ui/dialog.js',

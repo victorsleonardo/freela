@@ -271,21 +271,164 @@
     .top h1{ font-size: 24px; }
   }
 
-  /* ---------- relatório para exportação em PDF (via impressão do navegador) ---------- */
-  #print-report{ display:none; }
-  #print-report .pr-title{ font-family: var(--font-display); font-size:22px; margin-bottom:2px; }
-  #print-report .pr-sub{ font-size:12px; color:#666; margin-bottom:20px; }
-  #print-report table{ width:100%; border-collapse:collapse; margin-bottom:24px; font-size:12px; }
-  #print-report th, #print-report td{ border:1px solid #ccc; padding:6px 8px; text-align:left; }
-  #print-report th{ background:#f0f0f0; }
-  #print-report .pr-section-title{ font-size:15px; font-weight:700; margin:22px 0 10px; }
-  #print-report .pr-stats{ display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px; }
-  #print-report .pr-stat{ font-size:12.5px; }
-  #print-report .pr-stat b{ display:block; font-size:16px; }
+  /* ==========================================================================
+     Relatório para exportação em PDF (via impressão do navegador)
+     --------------------------------------------------------------------------
+     Paleta própria, fixa em claro — independe do tema do app: papel é sempre
+     branco, e um relatório num tema escuro só gasta tinta e imprime mal.
+     Espelha a paleta usada no Excel (assets/js/xlsx-report.js) para os dois
+     exports terem a mesma identidade visual.
+     ========================================================================== */
+  #print-report{
+    display:none;
+    --pr-dark:   #1E2233;
+    --pr-med:    #2E3348;
+    --pr-accent: #0F8F6E;
+    --pr-good:   #0F7A57;
+    --pr-good-bg:#E3F8EF;
+    --pr-warn:   #92400E;
+    --pr-warn-bg:#FDF1E0;
+    --pr-text:   #1E2233;
+    --pr-muted:  #6B7280;
+    --pr-faint:  #9CA3AF;
+    --pr-border: #E2E5EC;
+    --pr-zebra:  #F7F8FA;
+  }
+  #print-report .pr-page{ font-family: 'Inter', system-ui, sans-serif; color: var(--pr-text); }
+
+  #print-report .pr-header{
+    background: var(--pr-dark);
+    color: #fff;
+    padding: 22px 26px 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+  }
+  #print-report .pr-brand{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,.6); margin: 0 0 6px;
+  }
+  #print-report .pr-title{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px; font-weight: 700; margin: 0 0 4px; color:#fff;
+  }
+  #print-report .pr-meta{ font-size: 11.5px; color: rgba(255,255,255,.75); margin:0; }
+
+  #print-report .pr-kpis{
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    margin-bottom: 20px;
+  }
+  #print-report .pr-kpi{
+    border: 1px solid var(--pr-border); border-radius: 8px;
+    background: var(--pr-zebra); padding: 9px 10px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  #print-report .pr-kpi.hero{ background: var(--pr-good-bg); border-color: var(--pr-good); }
+  #print-report .pr-kpi-label{
+    font-size: 8.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--pr-muted);
+  }
+  #print-report .pr-kpi-value{
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
+    color: var(--pr-dark); white-space: nowrap;
+  }
+
+  #print-report .pr-block{ margin-bottom: 20px; }
+  #print-report .pr-section{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px; font-weight: 700; color: var(--pr-dark);
+    margin: 0 0 8px; padding-bottom: 5px;
+    border-bottom: 2px solid var(--pr-accent);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  #print-report .pr-count{
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 600;
+    color: var(--pr-muted);
+  }
+
+  #print-report .pr-insights{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  #print-report .pr-insight{
+    font-size: 11px; line-height: 1.5; padding: 8px 11px; border-radius: 7px;
+    border: 1px solid var(--pr-border); background: var(--pr-zebra);
+  }
+  #print-report .pr-insight.good{ background: var(--pr-good-bg); border-color: var(--pr-good); color: var(--pr-good); }
+  #print-report .pr-insight.warn{ background: var(--pr-warn-bg); border-color: var(--pr-warn); color: var(--pr-warn); }
+  #print-report .pr-insight.bad{ background: #FDE8E8; border-color: #B91C1C; color: #991B1B; }
+  #print-report .pr-insight.info{ color: var(--pr-text); }
+
+  #print-report table.pr-table{ width:100%; border-collapse: collapse; font-size: 10.5px; }
+  #print-report .pr-table th{
+    background: var(--pr-med); color: #fff; font-weight: 700; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: .4px;
+    padding: 7px 9px; text-align: left; border: 1px solid var(--pr-med);
+  }
+  #print-report .pr-table td{
+    padding: 6px 9px; border: 1px solid var(--pr-border); text-align: left;
+    vertical-align: middle;
+  }
+  #print-report .pr-table tbody tr:nth-child(even){ background: var(--pr-zebra); }
+  #print-report .pr-table tr.zebra{ background: var(--pr-zebra); }
+  #print-report .pr-table .num{ text-align: right; font-family: 'JetBrains Mono', monospace; }
+  #print-report .pr-table .strong{ font-weight: 700; color: var(--pr-dark); }
+  #print-report .pr-table .accent{ color: var(--pr-good); }
+  #print-report .pr-table tfoot td{
+    background: var(--pr-zebra); font-weight: 700; border-top: 2px solid var(--pr-dark);
+  }
+  #print-report .pr-muted{ color: var(--pr-faint); font-style: italic; }
+
+  #print-report .pr-tag{
+    display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 999px;
+  }
+  #print-report .pr-tag.good{ background: var(--pr-good-bg); color: var(--pr-good); }
+  #print-report .pr-tag.warn{ background: var(--pr-warn-bg); color: var(--pr-warn); }
+  #print-report .pr-tag.sm{ font-size: 8px; padding: 1px 6px; margin-left: 4px; }
+
+  #print-report .bar-cell{ width: 90px; }
+  #print-report .pr-bar{
+    display: block; width: 100%; height: 6px; border-radius: 3px;
+    background: var(--pr-border); overflow: hidden;
+  }
+  #print-report .pr-bar-fill{ display: block; height: 100%; background: var(--pr-dark); border-radius: 3px; }
+  #print-report .pr-bar-fill.accent{ background: var(--pr-good); }
+
+  #print-report .pr-stats-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+  #print-report .pr-endnote{
+    font-size: 9px; color: var(--pr-faint); font-style: italic;
+    border-top: 1px solid var(--pr-border); padding-top: 10px; margin-top: 24px;
+  }
+
+  /* Não usamos rodapé fixo por página: position:fixed repete, mas nada nesta
+     página reserva o espaço embaixo dele em CADA página quebrada — o
+     conteúdo (a tabela de lançamentos, principalmente) ficava por baixo do
+     rodapé nas páginas do meio. O cabeçalho/rodapé nativo do navegador (que
+     o usuário liga na caixa de impressão) já cobre data e paginação; aqui
+     basta a nota de encerramento em fluxo normal, uma vez, no fim.         */
+  #print-report .pr-fixed-footer{ display: none; }
+
   @media print{
+    @page{ size: A4; margin: 14mm 12mm; }
+
+    /* `body *` seleciona descendentes, não o body — o fundo escuro do tema
+       atual continuava por trás do relatório (visível nos vãos entre
+       conteúdo e fim de página) porque só os FILHOS viravam invisíveis. */
+    body, html{ background:#fff !important; }
+    body::before, body::after{ display:none !important; }
     body *{ visibility:hidden; }
     #print-report, #print-report *{ visibility:visible; }
-    #print-report{ display:block; position:absolute; top:0; left:0; width:100%; color:#000; background:#fff; padding:20px; }
+    #print-report{
+      display:block; position:absolute; top:0; left:0; width:100%;
+      color:#000; background:#fff; padding:0; margin:0;
+    }
+    #print-report .pr-header{ break-after: avoid; }
+    #print-report .pr-kpis{ break-inside: avoid; }
+    #print-report .pr-section{ break-after: avoid; }
+    #print-report .pr-block.pr-avoid-break{ break-inside: avoid; }
+    #print-report table.pr-table{ break-inside: auto; }
+    #print-report .pr-table tr{ break-inside: avoid; }
+    #print-report .pr-table thead{ display: table-header-group; }
+    #print-report .pr-table tfoot{ display: table-row-group; }
   }
 
   /* ---------- gate screens (connect / login) ---------- */
