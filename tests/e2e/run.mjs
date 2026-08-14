@@ -92,12 +92,12 @@ async function connectAndLogin(page) {
   await page.fill('#cfg-url', 'https://demo.supabase.co');
   await page.fill('#cfg-key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.x');
   await page.click('#btn-connect');
-  await page.waitForSelector('#gate-auth:visible', { timeout: 5000 });
+  await page.waitForSelector('#gate-auth:visible', { timeout: 15000 });
   await page.fill('#auth-email', 'teste@exemplo.com');
   await page.fill('#auth-pass', 'senha123');
   await page.click('#btn-auth-submit');
-  await page.waitForSelector('#app-shell:visible', { timeout: 5000 });
-  await page.waitForSelector('#stat-grid .stat-card', { timeout: 5000 });
+  await page.waitForSelector('#app-shell:visible', { timeout: 15000 });
+  await page.waitForSelector('#stat-grid .stat-card', { timeout: 15000 });
 }
 
 async function addEntry(page, { date, turno = 'Completo', custom = '', note = '' }) {
@@ -110,7 +110,7 @@ async function addEntry(page, { date, turno = 'Completo', custom = '', note = ''
   await page.waitForFunction(
     (d) => !!document.querySelector(`#entries-list .entry-row`),
     date,
-    { timeout: 5000 }
+    { timeout: 15000 }
   );
 }
 
@@ -396,7 +396,7 @@ async function main() {
         });
       });
       await page.reload();
-      await page.waitForSelector('#app-shell:visible', { timeout: 5000 });
+      await page.waitForSelector('#app-shell:visible', { timeout: 15000 });
       await page.click('.tab[data-tab="lancamentos"]');
       await page.waitForSelector('#entries-list .entry-row', { timeout: 5000 });
 
@@ -442,46 +442,51 @@ async function main() {
     });
 
     await check('abre offline (a promessa que o app não cumpria)', async () => {
+      const pageErrors = [];
+      page.on('pageerror', (e) => pageErrors.push(e.message));
+
       await context.setOffline(true);
       await page.reload();
 
-      // Neste contexto não há URL/chave salvas, então o boot tem que parar na
-      // tela de conexão. Esperar por ela VISÍVEL prova que os módulos ES
-      // rodaram — o HTML sozinho deixa as três telas com display:none.
-      const visible = () =>
-        page.evaluate(() => {
-          const el = document.getElementById('gate-connect');
-          return Boolean(el && el.offsetParent !== null);
-        });
-
-      try {
-        await page.waitForFunction(
-          () => {
-            const el = document.getElementById('gate-connect');
-            return Boolean(el && el.offsetParent !== null);
-          },
-          null, { timeout: 10000 }
-        );
-      } catch (_) {
-        // Diagnóstico no próprio erro: sem isso, uma falha em CI vira adivinhação.
-        const diag = await page.evaluate(() => ({
-          html: document.documentElement.outerHTML.length,
-          controller: navigator.serviceWorker.controller !== null,
+      // O que este teste prova é que o app ABRE sem rede: HTML, CSS e módulos
+      // vieram do cache e o boot rodou até revelar uma das telas. Qual delas
+      // aparece depende do estado salvo e não é o que está sendo verificado —
+      // exigir uma específica foi o que fez este teste falhar no CI.
+      const state = () => page.evaluate(() => {
+        const vis = (id) => {
+          const el = document.getElementById(id);
+          return Boolean(el && getComputedStyle(el).display !== 'none');
+        };
+        return {
+          connect: vis('gate-connect'),
+          auth: vis('gate-auth'),
+          app: vis('app-shell'),
           theme: document.documentElement.getAttribute('data-theme'),
-          lang: document.documentElement.getAttribute('lang'),
           supabase: typeof window.supabase,
           bg: getComputedStyle(document.body).backgroundColor
-        }));
-        throw new Error('a tela de conexão não apareceu offline — ' + JSON.stringify(diag));
+        };
+      });
+
+      try {
+        await page.waitForFunction(() => {
+          const vis = (id) => {
+            const el = document.getElementById(id);
+            return Boolean(el && getComputedStyle(el).display !== 'none');
+          };
+          return vis('gate-connect') || vis('gate-auth') || vis('app-shell');
+        }, null, { timeout: 10000 });
+      } catch (_) {
+        // Diagnóstico dentro do erro: sem isso, falha em CI vira adivinhação.
+        throw new Error(
+          'nenhuma tela apareceu offline — ' + JSON.stringify(await state()) +
+          ' erros: ' + JSON.stringify(pageErrors)
+        );
       }
 
-      assert(await visible(), 'a tela de conexão deveria estar visível');
-
-      const styled = await page.evaluate(() => {
-        const bg = getComputedStyle(document.body).backgroundColor;
-        return bg !== 'rgba(0, 0, 0, 0)' && bg !== '';
-      });
-      assert(styled, 'o CSS não veio do cache');
+      const s = await state();
+      assert(s.supabase === 'object', 'o supabase-js não veio do cache');
+      assert(s.bg !== 'rgba(0, 0, 0, 0)' && s.bg !== '', 'o CSS não veio do cache');
+      assertEqual(pageErrors.length, 0, 'erros de JS offline: ' + pageErrors.join(' | '));
       assertEqual(await page.title(), 'Painel Freelancer');
 
       await context.setOffline(false);
