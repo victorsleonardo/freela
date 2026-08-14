@@ -1,16 +1,37 @@
 {
+  "id": "painel-freelancer",
   "name": "Painel de Ganhos — Freelancer",
-  "short_name": "Painel Freelancer",
-  "description": "Controle de turnos e ganhos do freelancer, com sincronização na nuvem.",
+  "short_name": "Painel",
+  "description": "Controle de turnos e ganhos do freelancer, com sincronização na nuvem e uso offline.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#0D1017",
   "theme_color": "#0D1017",
+  "categories": ["finance", "productivity", "business"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo lançamento",
+      "short_name": "Lançar",
+      "description": "Registrar um turno de hoje",
+      "url": "./index.html?acao=novo",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendário",
+      "short_name": "Calendário",
+      "description": "Ver o mês em turnos",
+      "url": "./index.html?aba=calendario",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
