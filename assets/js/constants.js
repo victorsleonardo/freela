@@ -1,7 +1,7 @@
 /* Constantes compartilhadas. Sem dependências — pode ser importado por qualquer
    módulo, inclusive pelos testes rodando em Node. */
 
-export const APP_VERSION = '3.0.0';
+export const APP_VERSION = '3.1.0';
 
 /** Versão do documento salvo na nuvem. v1 = array cru de lançamentos. */
 export const DATA_VERSION = 2;

@@ -1,6 +1,6 @@
 {
   "name": "painel-freelancer",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "description": "Painel de ganhos e turnos para freelancer — PWA offline-first com sincronização via Supabase.",
@@ -8,7 +8,8 @@
     "test": "TZ=America/Sao_Paulo node --test tests/*.test.js",
     "test:e2e": "node tests/e2e/run.mjs",
     "serve": "python3 -m http.server 8080",
-    "shots": "node tests/e2e/screenshots.mjs"
+    "shots": "node tests/e2e/screenshots.mjs",
+    "export-check": "node tests/e2e/export-check.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.0"

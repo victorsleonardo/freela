@@ -1,4 +1,5 @@
 node_modules/
 screenshots/
+tmp-export-check/
 *.log
 .DS_Store
