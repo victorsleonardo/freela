@@ -12,7 +12,7 @@
  *  - navegação usa network-first (pega deploy novo) com fallback para o cache.
  * ========================================================================== */
 
-const VERSION = 'v3.0.0';
+const VERSION = 'v3.0.1';
 const SHELL_CACHE = `painel-shell-${VERSION}`;
 const RUNTIME_CACHE = `painel-runtime-${VERSION}`;
 
@@ -22,6 +22,7 @@ const SHELL = [
   './manifest.json',
   './assets/css/app.css',
   './assets/js/main.js',
+  './assets/js/actions.js',
   './assets/js/constants.js',
   './assets/js/i18n.js',
   './assets/js/format.js',
@@ -128,18 +129,23 @@ self.addEventListener('fetch', (event) => {
   // Assets: cache primeiro (abre instantâneo) e revalida em segundo plano.
   event.respondWith((async () => {
     const cached = await caches.match(req, { ignoreSearch: false });
+
+    // `event.waitUntil` precisa cobrir a gravação em QUALQUER caminho — antes
+    // só cobria a revalidação em segundo plano (cached === truthy). No
+    // caminho de módulo ES ainda não visto (ex.: um arquivo esquecido na
+    // lista SHELL), a gravação corria sem essa garantia: o navegador podia
+    // encerrar o service worker antes do cache.put() terminar, e o arquivo
+    // nunca ficava disponível para a próxima vez offline.
     const network = fetch(req).then(async (res) => {
       if (res && res.ok) {
         const cache = await caches.open(cached ? SHELL_CACHE : RUNTIME_CACHE);
-        cache.put(req, res.clone());
+        await cache.put(req, res.clone());
       }
       return res;
     }).catch(() => null);
+    event.waitUntil(network);
 
-    if (cached) {
-      event.waitUntil(network);
-      return cached;
-    }
+    if (cached) return cached;
     const fresh = await network;
     return fresh || new Response('', { status: 504, statusText: 'Offline' });
   })());

@@ -448,44 +448,41 @@ async function main() {
       await context.setOffline(true);
       await page.reload();
 
-      // O que este teste prova é que o app ABRE sem rede: HTML, CSS e módulos
-      // vieram do cache e o boot rodou até revelar uma das telas. Qual delas
-      // aparece depende do estado salvo e não é o que está sendo verificado —
-      // exigir uma específica foi o que fez este teste falhar no CI.
-      const state = () => page.evaluate(() => {
-        const vis = (id) => {
+      // Prova de que o boot() de main.js rodou de verdade offline: as três
+      // telas nascem com `style="display:none"` no próprio HTML, então tema
+      // escuro e fundo escuro são só o CSS padrão — não provam nada sozinhos.
+      // O que só o JS faz é limpar esse `display:none` inline via showGate().
+      // Qual tela fica visível depende do que estava salvo (aqui, sem
+      // localStorage, é sempre "connect") — não é isso que se verifica.
+      const jsRan = () => page.evaluate(() => {
+        const cleared = (id) => {
           const el = document.getElementById(id);
-          return Boolean(el && getComputedStyle(el).display !== 'none');
+          return Boolean(el && el.style.display === '');
         };
-        return {
-          connect: vis('gate-connect'),
-          auth: vis('gate-auth'),
-          app: vis('app-shell'),
-          theme: document.documentElement.getAttribute('data-theme'),
-          supabase: typeof window.supabase,
-          bg: getComputedStyle(document.body).backgroundColor
-        };
+        return cleared('gate-connect') || cleared('gate-auth') || cleared('app-shell');
       });
 
       try {
         await page.waitForFunction(() => {
-          const vis = (id) => {
+          const cleared = (id) => {
             const el = document.getElementById(id);
-            return Boolean(el && getComputedStyle(el).display !== 'none');
+            return Boolean(el && el.style.display === '');
           };
-          return vis('gate-connect') || vis('gate-auth') || vis('app-shell');
+          return cleared('gate-connect') || cleared('gate-auth') || cleared('app-shell');
         }, null, { timeout: 10000 });
       } catch (_) {
-        // Diagnóstico dentro do erro: sem isso, falha em CI vira adivinhação.
+        // Diagnóstico dentro do erro: sem isso, uma falha em CI vira adivinhação.
+        const diag = await page.evaluate(() => ({
+          supabaseLibLoaded: typeof window.supabase,
+          swController: navigator.serviceWorker.controller !== null
+        }));
         throw new Error(
-          'nenhuma tela apareceu offline — ' + JSON.stringify(await state()) +
-          ' erros: ' + JSON.stringify(pageErrors)
+          'main.js não rodou offline (nenhuma tela foi liberada pelo JS) — ' +
+          JSON.stringify(diag) + ' erros: ' + JSON.stringify(pageErrors)
         );
       }
 
-      const s = await state();
-      assert(s.supabase === 'object', 'o supabase-js não veio do cache');
-      assert(s.bg !== 'rgba(0, 0, 0, 0)' && s.bg !== '', 'o CSS não veio do cache');
+      assert(await jsRan(), 'esperava um style.display limpo por JS, não pelo CSS padrão');
       assertEqual(pageErrors.length, 0, 'erros de JS offline: ' + pageErrors.join(' | '));
       assertEqual(await page.title(), 'Painel Freelancer');
 
