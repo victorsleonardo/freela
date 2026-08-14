@@ -419,17 +419,13 @@ async function main() {
     await page.goto(BASE + '/index.html');
 
     await check('service worker registra e assume o controle', async () => {
-      await page.waitForFunction(
-        () => navigator.serviceWorker.controller !== null ||
-              (navigator.serviceWorker.getRegistration !== undefined),
-        null, { timeout: 8000 }
-      );
       await page.evaluate(() => navigator.serviceWorker.ready);
-      const controlled = await page.evaluate(async () => {
-        const reg = await navigator.serviceWorker.getRegistration();
-        return Boolean(reg && (reg.active || reg.waiting || reg.installing));
-      });
-      assert(controlled, 'esperava um service worker ativo');
+      // `controller !== null` é a única prova de que o SW está de fato
+      // atendendo esta página. Sem isso, o teste offline abaixo não prova nada.
+      await page.waitForFunction(
+        () => navigator.serviceWorker.controller !== null,
+        null, { timeout: 10000 }
+      );
     });
 
     await check('o shell inteiro fica em cache', async () => {
@@ -448,14 +444,46 @@ async function main() {
     await check('abre offline (a promessa que o app não cumpria)', async () => {
       await context.setOffline(true);
       await page.reload();
-      await page.waitForSelector('#gate-connect, #gate-auth, #app-shell', { timeout: 8000 });
+
+      // Neste contexto não há URL/chave salvas, então o boot tem que parar na
+      // tela de conexão. Esperar por ela VISÍVEL prova que os módulos ES
+      // rodaram — o HTML sozinho deixa as três telas com display:none.
+      const visible = () =>
+        page.evaluate(() => {
+          const el = document.getElementById('gate-connect');
+          return Boolean(el && el.offsetParent !== null);
+        });
+
+      try {
+        await page.waitForFunction(
+          () => {
+            const el = document.getElementById('gate-connect');
+            return Boolean(el && el.offsetParent !== null);
+          },
+          null, { timeout: 10000 }
+        );
+      } catch (_) {
+        // Diagnóstico no próprio erro: sem isso, uma falha em CI vira adivinhação.
+        const diag = await page.evaluate(() => ({
+          html: document.documentElement.outerHTML.length,
+          controller: navigator.serviceWorker.controller !== null,
+          theme: document.documentElement.getAttribute('data-theme'),
+          lang: document.documentElement.getAttribute('lang'),
+          supabase: typeof window.supabase,
+          bg: getComputedStyle(document.body).backgroundColor
+        }));
+        throw new Error('a tela de conexão não apareceu offline — ' + JSON.stringify(diag));
+      }
+
+      assert(await visible(), 'a tela de conexão deveria estar visível');
+
       const styled = await page.evaluate(() => {
         const bg = getComputedStyle(document.body).backgroundColor;
         return bg !== 'rgba(0, 0, 0, 0)' && bg !== '';
       });
       assert(styled, 'o CSS não veio do cache');
-      const title = await page.title();
-      assertEqual(title, 'Painel Freelancer');
+      assertEqual(await page.title(), 'Painel Freelancer');
+
       await context.setOffline(false);
     });
 
