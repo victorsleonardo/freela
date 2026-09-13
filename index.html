@@ -1,506 +1,2320 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="escuro">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Painel Freelancer</title>
-<meta name="description" content="Controle de turnos e ganhos do freelancer, com sincronização na nuvem e uso offline.">
-
-<!-- PWA: instalável na tela inicial e funcional sem internet -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071880">
+<title>Preços — Adega Noruega</title>
+<meta name="description" content="Tabela de preços interna da Adega Noruega. Consulta rápida de valores de bebidas, combos e doses para a equipe do balcão.">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Preços — Adega Noruega">
+<meta property="og:description" content="Tabela de preços interna da Adega Noruega.">
+<meta property="og:locale" content="pt_BR">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D1017">
-<meta name="color-scheme" content="dark light">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Painel Freelancer">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png" type="image/png">
 
-<link rel="preload" href="assets/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/fonts/jetbrains-mono-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/app.css">
+<style>
+:root{
+  --nav:#071880;
+  --nav-alto:#152CA0;
+  --nav-claro:#2F45C4;
+  --ink:#121417;
+  --paper:#FFFFFF;
+  --sheet:#F6F6F6;
+  --line:#E1E3E8;
+  --mute:#6B7280;
+  --ouro:#D9A32C;
+  --ouro-fundo:#FDF6E6;
+  --toque:56px;
+  --gut:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{min-height:100vh;display:flex;flex-direction:column;}
+#tela{flex:1;display:flex;flex-direction:column;background:#fff;}
+.quadro{flex:1;}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  font-size:16px;line-height:1.4;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button{font:inherit;color:inherit;}
+:focus-visible{outline:3px solid var(--nav-claro);outline-offset:2px;}
 
-<!-- Vendorizado: o app abre offline e não depende de nenhum CDN de terceiros. -->
-<script src="vendor/supabase.js" defer></script>
-<script type="module" src="assets/js/main.js"></script>
+/* ---------- topo fixo ---------- */
+.topo{position:sticky;top:0;z-index:30;background:var(--nav);color:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) var(--gut) 12px;}
+.marca{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.selo{width:34px;height:34px;border-radius:50%;flex:0 0 auto;
+  object-fit:cover;background:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.4);}
+.marca h1{margin:0;font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
+.marca .sub{margin-left:auto;font-size:12px;color:rgba(255,255,255,.62);}
+
+/* ---- tela de entrada (login da equipe) ---- */
+body.entrada-tela .topo, body.entrada-tela .estado{display:none;}
+.entrada-box{max-width:320px;margin:14vh auto 0;padding:0 20px;text-align:center;}
+.entrada-logo{width:64px;height:64px;border-radius:50%;object-fit:cover;
+  box-shadow:0 2px 10px rgba(7,24,128,.25);margin-bottom:16px;}
+.entrada-box h1{margin:0 0 6px;font-size:19px;font-weight:800;color:var(--nav);}
+.entrada-box p{margin:0 0 18px;font-size:14px;color:var(--mute);line-height:1.5;}
+.entrada-box .entrada-erro{color:var(--ouro);font-weight:600;margin-top:-8px;margin-bottom:14px;}
+.entrada-box input{width:100%;height:52px;padding:0 15px;border:1.5px solid #C9C9C9;
+  border-radius:10px;font-family:inherit;font-size:17px;text-align:center;
+  color:var(--ink);outline:none;margin-bottom:12px;box-sizing:border-box;}
+.entrada-box input:focus{border-color:var(--nav);}
+.entrada-box input:focus-visible{outline:3px solid var(--nav-claro);outline-offset:2px;}
+.entrada-box button{width:100%;height:52px;border:0;border-radius:10px;background:var(--nav);
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+.entrada-box button:disabled{background:#B5B9C6;}
+.entrada-box .entrada-cancelar{background:none;color:var(--mute);margin-top:8px;font-weight:600;}
+
+.campo{position:relative;}
+.campo input{width:100%;font-family:inherit;font-size:17px;font-weight:500;
+  height:var(--toque);padding:0 46px 0 44px;border:0;border-radius:12px;
+  background:#fff;color:var(--ink);outline:none;}
+.campo input::placeholder{color:#8B93A4;font-weight:400;}
+.lupa{position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;pointer-events:none;opacity:.5;}
+.limpar{position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  width:46px;height:46px;border:0;background:none;color:var(--mute);
+  font-size:26px;line-height:1;cursor:pointer;display:none;border-radius:10px;}
+.limpar.on{display:block;}
+
+/* ---------- barra de estado ---------- */
+.estado{display:flex;align-items:center;gap:10px;
+  padding:9px var(--gut);background:var(--sheet);border-bottom:1px solid var(--line);
+  font-size:13px;color:var(--mute);}
+.estado .quando{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.estado .quando b{color:var(--ink);font-weight:600;}
+.status-doses{color:var(--mute);}
+.status-doses.ok{color:#0A7A3D;}
+.status-doses.aviso{color:var(--ouro);}
+.atualizar{flex:0 0 auto;height:36px;padding:0 14px;border:1px solid var(--line);
+  background:#fff;border-radius:8px;font-size:13px;font-weight:600;color:var(--nav);cursor:pointer;}
+.atualizar:disabled{color:var(--mute);cursor:default;}
+
+/* ---------- quadro de categorias ---------- */
+.quadro{padding:16px var(--gut) 34px;background:var(--nav);min-height:calc(100vh - 190px);}
+.quadro .titulo{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);margin:0 0 12px 2px;}
+.grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-items:stretch;}
+.tile{display:flex;align-items:center;gap:8px;min-height:52px;
+  padding:9px 11px;border:1px solid rgba(255,255,255,.14);
+  background:var(--nav-alto);color:#fff;border-radius:10px;text-align:left;cursor:pointer;
+  transition:background .12s;overflow:hidden;}
+.tile:active{background:var(--nav-claro);}
+.tile .nm{flex:1;min-width:0;font-size:13.5px;font-weight:650;line-height:1.2;
+  letter-spacing:.004em;overflow-wrap:break-word;}
+.tile .ct{flex:0 0 auto;font-size:11.5px;color:rgba(255,255,255,.5);
+  font-variant-numeric:tabular-nums;}
+.tile.combo{background:#0E5C4A;border-color:#0E5C4A;color:#fff;}
+.tile.combo .nm{font-weight:700;}
+.tile.combo .ct{color:rgba(255,255,255,.6);}
+.tile.doses{grid-column:1 / -1;background:var(--ouro);border-color:var(--ouro);color:#3A2A05;}
+.tile.doses .nm{font-size:15px;font-weight:750;}
+.tile.doses .ct{color:rgba(58,42,5,.62);font-weight:600;}
+
+/* ---------- lista de preços ---------- */
+.voltar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;width:100%;
+  height:50px;padding:0 var(--gut);background:#fff;border:0;border-bottom:1px solid var(--line);
+  cursor:pointer;text-align:left;}
+.voltar .ch{font-size:20px;color:var(--nav);line-height:1;}
+.voltar .tx{font-size:15px;font-weight:600;}
+.voltar .qt{margin-left:auto;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;}
+
+.cab{position:sticky;top:50px;z-index:10;background:var(--sheet);
+  padding:7px var(--gut);font-size:11.5px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mute);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.cab.solto{position:static;}
+
+.item{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;
+  padding:10px var(--gut);background:none;border:0;border-bottom:1px solid #EFF2F7;
+  text-align:left;cursor:pointer;}
+.item:disabled{cursor:default;}
+.item:not(:disabled):active{background:#F7F9FC;}
+.nm{flex:1;min-width:0;font-size:15.5px;font-weight:550;line-height:1.28;}
+.pr{flex:0 0 auto;text-align:right;}
+.pr .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.pr .rot{display:block;font-size:11px;color:var(--mute);font-weight:500;margin-top:1px;}
+.seta{flex:0 0 auto;width:11px;text-align:center;color:#B9C0CE;font-size:15px;
+  transition:transform .15s;}
+.item.ab .seta{transform:rotate(90deg);}
+
+.det{background:var(--sheet);border-bottom:1px solid #EFF2F7;padding:2px var(--gut) 11px;}
+.op{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #E6EBF3;}
+.op:first-child,.grupo-t + .op{border-top:0;}
+.op .lb{flex:1;min-width:0;}
+.op .lb span{display:block;font-size:14.5px;font-weight:550;line-height:1.3;}
+.op .lb em{display:block;font-style:normal;font-size:12.5px;color:var(--mute);margin-top:2px;}
+.op .vl{flex:0 0 auto;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;}
+.grupo-t{margin:11px 0 1px;font-size:11.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--nav);}
+.op + .grupo-t{margin-top:14px;}
+.vem{margin:3px 0 2px;font-size:12.5px;color:var(--mute);line-height:1.45;}
+.sabores{margin:9px 0 2px;padding:9px 11px;background:#fff;border:1px solid var(--line);
+  border-radius:8px;font-size:13px;color:var(--ink);line-height:1.5;}
+
+.combo-fixo{border-bottom:1px solid #EFF2F7;}
+.combo-fixo-nome{padding:12px var(--gut) 0;font-size:15.5px;font-weight:550;line-height:1.28;}
+.combo-fixo .det{background:none;border-bottom:0;padding:2px var(--gut) 12px;}
+.sabores b{font-weight:650;}
+.aviso{margin:9px 0 2px;padding:9px 11px;background:var(--ouro-fundo);
+  border:1px solid #F0DFB4;border-radius:8px;font-size:12.5px;color:#6B551D;line-height:1.45;}
+
+/* ---------- área da dona ---------- */
+.entrada{display:block;width:100%;margin-top:26px;padding:13px;border:1px solid rgba(255,255,255,.2);
+  background:transparent;color:rgba(255,255,255,.7);border-radius:10px;
+  font-size:13.5px;font-weight:600;cursor:pointer;}
+.entrada:active{background:rgba(255,255,255,.08);}
+
+.dona-topo{position:sticky;top:0;z-index:25;background:var(--ouro);color:#3A2A05;
+  padding:calc(9px + env(safe-area-inset-top)) var(--gut) 11px;}
+.dona-topo .l1{display:flex;align-items:center;gap:10px;}
+.admin-lista{padding:4px 0 30px;}
+.admin-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:13px var(--gut);background:none;border:0;border-bottom:1px solid #EFF0F2;
+  font-family:inherit;color:inherit;cursor:pointer;}
+.admin-item:active{background:#FAFAFA;}
+.admin-item .nm{flex:1;min-width:0;font-size:15px;font-weight:600;}
+.admin-item .ct{flex:0 0 auto;font-size:12.5px;color:var(--mute);font-variant-numeric:tabular-nums;}
+.admin-item .seta{flex:0 0 auto;width:10px;color:#B9C0CE;font-size:14px;}
+
+.admin-corpo{padding:2px var(--gut) 130px;}
+.secao-t{margin:20px 0 3px;font-size:12px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--nav);}
+.secao-t:first-child{margin-top:14px;}
+.secao-t.separa{margin-top:26px;}
+.aviso-leve{margin:0 0 10px;font-size:12.5px;color:var(--mute);line-height:1.45;}
+.vazio-leve{margin:6px 0 4px;font-size:13.5px;color:var(--mute);}
+.doses-aviso{padding:0 var(--gut);margin-top:10px;}
+
+.ro{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #F0F0F0;}
+.ro:first-of-type{border-top:0;}
+.ro .nm{flex:1;min-width:0;font-size:14px;color:#444;}
+.ro .pr{flex:0 0 auto;text-align:right;}
+.ro .pr .v{font-size:14.5px;font-weight:650;color:#444;}
+.ro .pr .rot{display:block;font-size:11px;color:var(--mute);}
+
+.manual{padding:12px 0;border-top:1px solid #F0F0F0;}
+.manual:first-of-type{border-top:0;}
+.duas{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.uma{display:grid;grid-template-columns:1fr;gap:8px;max-width:220px;}
+
+.form-novo{margin-top:12px;padding:14px;border:1.5px solid var(--line);border-radius:11px;background:#FAFBFC;}
+.campo-form{display:block;margin-bottom:10px;}
+.campo-form .tit{display:block;font-size:11.5px;font-weight:650;color:var(--mute);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.campo-form input[type="text"]{width:100%;height:44px;padding:0 11px;border:1.5px solid var(--line);
+  border-radius:9px;font-family:inherit;font-size:15px;background:#fff;color:var(--ink);outline:none;}
+.campo-form input:focus{border-color:var(--nav);}
+.campo-form input:focus-visible{outline:3px solid var(--nav-claro);outline-offset:2px;}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);margin:2px 0 4px;}
+.chk input{width:17px;height:17px;}
+.form-botoes{display:flex;gap:10px;margin-top:8px;}
+.btn-cancelar{flex:0 0 auto;height:44px;padding:0 16px;border:1px solid var(--line);border-radius:9px;
+  background:#fff;color:var(--mute);font-size:14px;font-weight:600;cursor:pointer;}
+.btn-add{flex:1;height:44px;border:0;border-radius:9px;background:var(--nav);color:#fff;
+  font-size:14.5px;font-weight:700;cursor:pointer;}
+.dona-topo h2{margin:0;font-size:15.5px;font-weight:750;flex:1;}
+.dona-topo .sair{height:38px;padding:0 13px;border:1px solid rgba(58,42,5,.3);
+  background:rgba(255,255,255,.55);border-radius:8px;font-size:13.5px;font-weight:650;cursor:pointer;}
+.dona-topo p{margin:7px 0 0;font-size:12.5px;line-height:1.45;color:rgba(58,42,5,.8);}
+
+.teste{margin:0;padding:11px var(--gut);background:#FFF4D6;border-bottom:1px solid #F0DFB4;
+  font-size:12.5px;color:#6B551D;line-height:1.45;}
+.teste b{font-weight:700;}
+
+.dose-lista{padding:4px 0 130px;}
+.dose{padding:13px var(--gut);border-bottom:1px solid #EFF0F2;}
+.dose .cab-d{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.dose .nome-d{flex:1;min-width:0;font-size:15.5px;font-weight:650;line-height:1.3;}
+.dose .apagar-d{width:38px;height:38px;flex:0 0 auto;border:1px solid var(--line);background:#fff;
+  border-radius:8px;color:var(--mute);font-size:17px;line-height:1;cursor:pointer;}
+.tres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.tres label{display:block;}
+.tres .tit{display:block;font-size:11.5px;font-weight:650;color:var(--mute);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.moeda{position:relative;}
+.moeda .cif{position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--mute);pointer-events:none;}
+.moeda input{width:100%;height:48px;padding:0 8px 0 30px;border:1.5px solid var(--line);
+  border-radius:9px;font-family:inherit;font-size:16.5px;font-weight:650;
+  font-variant-numeric:tabular-nums;background:#fff;color:var(--ink);outline:none;}
+.moeda input:focus{border-color:var(--nav);}
+.moeda input:focus-visible{outline:3px solid var(--nav-claro);outline-offset:2px;}
+.moeda input.mudou{border-color:var(--ouro);background:#FFFDF5;}
+
+.nova{margin:14px var(--gut);padding:14px;border:1.5px dashed var(--line);background:#fff;
+  border-radius:11px;width:calc(100% - var(--gut) * 2);font-size:14.5px;font-weight:650;
+  color:var(--nav);cursor:pointer;}
+
+.salvar-barra{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding:11px var(--gut) calc(11px + env(safe-area-inset-bottom));
+  background:#fff;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:11px;box-shadow:0 -4px 16px rgba(0,0,0,.06);}
+.salvar-barra .cnt{flex:1;min-width:0;font-size:13.5px;color:var(--mute);line-height:1.35;}
+.salvar-barra .cnt b{color:var(--ink);font-weight:650;}
+.btn-salvar{height:48px;padding:0 22px;border:0;border-radius:10px;background:var(--nav);
+  color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;flex:0 0 auto;}
+.btn-salvar:disabled{background:#C7CAD1;cursor:default;}
+.btn-desfazer{height:48px;padding:0 15px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;font-size:14.5px;font-weight:600;color:var(--mute);cursor:pointer;flex:0 0 auto;}
+
+
+.vazio{text-align:center;padding:58px 24px;color:var(--mute);}
+.vazio strong{display:block;font-size:18px;color:var(--ink);margin-bottom:7px;}
+.rod{padding:16px var(--gut) 34px;text-align:center;font-size:12px;color:#98A1B2;}
+
+.grade.destaques{grid-template-columns:repeat(3,minmax(0,1fr));}
+.titulo.separa{margin-top:20px;}
+@media (min-width:560px){.grade{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media (min-width:760px){
+  :root{--gut:26px;}
+  body{background:#EDEFF3;}
+  .item:not(:disabled):hover{background:#F2F5FA;}
+  .tile:hover{background:var(--nav-claro);}
+  .tile.doses:hover{background:#E5AE3A;}
+  .tile.combo:hover{background:#12735C;}
+  .atualizar:not(:disabled):hover{border-color:var(--nav);}
+
+  /* topo: marca e busca na mesma linha */
+  .topo{padding-top:16px;padding-bottom:16px;}
+  .marca{margin-bottom:0;float:none;}
+  .topo{display:flex;align-items:center;gap:28px;}
+  .marca{flex:0 0 auto;}
+  .campo{flex:1;max-width:560px;}
+  .campo input{height:48px;font-size:16px;}
+
+  /* quadro: mais colunas, sem azul sobrando */
+  .marca .sub{display:none;}
+
+  /* estrutura: menu fixo + conteudo */
+  #tela{background:transparent;}
+  .pc{display:grid;grid-template-columns:250px minmax(0,1fr);
+    gap:0;width:100%;
+    height:calc(100vh - var(--alto-topo, 130px));}
+  html,body{height:100%;overflow:hidden;}
+  body{display:flex;flex-direction:column;}
+  #tela{flex:1;min-height:0;overflow-y:auto;}
+  .topo,.estado{flex:0 0 auto;}
+  .painel{background:var(--nav);padding:16px 14px 24px;overflow-y:auto;}
+  .painel .titulo{margin:0 0 9px 3px;font-size:11.5px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);}
+  .painel .titulo.separa{margin-top:18px;}
+  .menu{display:flex;flex-direction:column;gap:4px;}
+  .mi{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+    padding:9px 11px;border:1px solid transparent;border-radius:8px;
+    background:transparent;color:rgba(255,255,255,.86);cursor:pointer;font-size:13.5px;}
+  .mi .nm{flex:1;min-width:0;font-weight:600;line-height:1.25;}
+  .mi .ct{flex:0 0 auto;font-size:11.5px;color:rgba(255,255,255,.42);font-variant-numeric:tabular-nums;}
+  .mi:hover{background:rgba(255,255,255,.09);}
+  .mi.on{background:#fff;color:var(--nav);}
+  .mi.on .ct{color:rgba(7,24,128,.5);}
+  .mi.doses{color:var(--ouro);}
+  .mi.doses.on{background:var(--ouro);color:#3A2A05;}
+  .mi.doses.on .ct{color:rgba(58,42,5,.6);}
+  .mi.combo{color:#5FD0B4;}
+  .mi.combo.on{background:#0E5C4A;color:#fff;}
+  .painel .entrada{margin-top:20px;padding:10px;font-size:12.5px;}
+
+  .conteudo{background:#fff;overflow-y:auto;}
+  .corpo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:30px;align-content:start;padding:0 22px 30px;}
+  .corpo > .cab, .corpo > .rod{grid-column:1 / -1;}
+  .cab{position:sticky;top:0;z-index:5;margin-inline:-22px;
+    padding:13px 22px 11px;background:#fff;
+    font-size:19px;font-weight:800;letter-spacing:-.01em;
+    text-transform:none;color:var(--nav);
+    border-top:0;border-bottom:2px solid var(--nav);}
+  .corpo > .cab + .li .item{border-top:0;}
+  .corpo > .cab ~ .cab{margin-top:34px;}
+  .item .nm{font-size:14.5px;font-weight:600;color:#22262E;}
+  .item .pr .v{font-size:16px;}
+  .li{min-width:0;align-self:start;}
+  .item{padding-inline:0;}
+  .det{padding:2px 12px 11px;background:#F8F9FC;border-radius:0 0 8px 8px;}
+  .quadro{display:none;}
+}
+@media (min-width:1500px){
+  .corpo{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (min-width:760px){
+  .dona-topo .l1,.dona-topo p{max-width:900px;margin-inline:auto;}
+  .teste{max-width:900px;margin:14px auto 0;border-radius:10px;}
+  .voltar{max-width:900px;margin:18px auto 0;border-radius:12px;
+    background:#fff;box-shadow:0 1px 3px rgba(20,20,40,.07);}
+  .doses-aviso{max-width:900px;margin:14px auto 0;padding:0;}
+  .salvar-barra{max-width:900px;margin-inline:auto;border-radius:10px;
+    left:0;right:0;bottom:18px;box-shadow:0 6px 20px rgba(20,20,40,.14);}
+
+  .admin-lista,.admin-corpo,.dose-lista{
+    max-width:900px;margin:14px auto 130px;
+    background:#fff;border-radius:14px;
+    box-shadow:0 1px 3px rgba(20,20,40,.07),0 10px 26px rgba(20,20,40,.06);
+    padding:6px 0 16px;
+  }
+  .admin-lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    padding:12px;gap:2px 14px;}
+  .admin-item{border-bottom:1px solid #F1F1F3;border-radius:9px;padding:13px 12px;}
+  .admin-item:hover{background:#F7F8FB;}
+  .admin-corpo{padding:2px 22px 20px;}
+  .form-novo{max-width:420px;}
+}
+body.dona .topo,body.dona .estado{display:none;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
 </head>
 <body>
 
-<noscript>
-  <div class="noscript-warn">
-    Este painel precisa de JavaScript para funcionar. Ative o JavaScript no navegador e recarregue a página.
+<header class="topo">
+  <div class="marca">
+    <img class="selo" src="data:image/webp;base64,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" alt="Adega Noruega" width="26" height="26">
+    <h1>Adega Noruega</h1>
+    <span class="sub">Tabela de preços</span>
   </div>
-</noscript>
-
-<a href="#panel-resumo" class="skip-link" data-i18n="a11y.skipToContent">Pular para o conteúdo</a>
-
-<!-- ===================== TELA: CONECTAR AO SUPABASE ===================== -->
-<div class="gate-wrap" id="gate-connect" style="display:none;">
-  <div class="glass gate-card">
-    <h1 data-i18n="gate.connect.title">Conectar à nuvem</h1>
-    <p class="gate-sub" data-i18n="gate.connect.sub">Cole a URL e a chave "anon public" do seu projeto Supabase.</p>
-    <div class="field">
-      <label for="cfg-url" data-i18n="gate.connect.url">Project URL</label>
-      <input type="url" id="cfg-url" placeholder="https://xxxxx.supabase.co" autocomplete="off" spellcheck="false">
-    </div>
-    <div class="field">
-      <label for="cfg-key" data-i18n="gate.connect.key">Anon public key</label>
-      <input type="text" id="cfg-key" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
-    </div>
-    <button type="button" id="btn-connect" data-i18n="gate.connect.btn">Conectar</button>
-    <div class="gate-error" id="connect-error" role="alert"></div>
+  <div class="campo">
+    <svg class="lupa" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/>
+    </svg>
+    <input id="busca" type="text" aria-label="Buscar produto pelo nome" placeholder="Buscar produto" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="limpar" id="limpar" aria-label="Apagar busca">&times;</button>
   </div>
+</header>
+
+<div class="estado">
+  <span class="quando" id="quando"></span>
+  <button class="atualizar" id="atualizar">Atualizar</button>
 </div>
 
-<!-- ===================== TELA: LOGIN / CADASTRO ===================== -->
-<div class="gate-wrap" id="gate-auth" style="display:none;">
-  <div class="glass gate-card">
-    <h1 id="auth-title">Entrar</h1>
-    <p class="gate-sub" data-i18n="gate.auth.sub">Use o mesmo e-mail e senha no computador e no celular.</p>
-    <div class="field">
-      <label for="auth-email" data-i18n="gate.auth.email">E-mail</label>
-      <input type="email" id="auth-email" placeholder="voce@email.com" autocomplete="email" inputmode="email">
-    </div>
-    <div class="field">
-      <label for="auth-pass" data-i18n="gate.auth.pass">Senha</label>
-      <input type="password" id="auth-pass" data-i18n-placeholder="gate.auth.passHint" autocomplete="current-password">
-    </div>
-    <button type="button" id="btn-auth-submit">Entrar</button>
-    <div class="gate-error" id="auth-error" role="alert"></div>
-    <div class="gate-switch">
-      <span id="auth-switch-text">Ainda não tem conta?</span>
-      <a id="auth-switch-link" role="button" tabindex="0">Criar conta</a>
-      <span class="gate-sep">·</span>
-      <a id="btn-forgot" role="button" tabindex="0" data-i18n="gate.auth.forgot">Esqueci minha senha</a>
-    </div>
-    <p class="gate-note" data-i18n="gate.auth.note">Seus dados ficam protegidos por login.</p>
-    <p class="gate-note gate-note-last">
-      <a id="btn-reconfigure" role="button" tabindex="0" data-i18n="gate.auth.reconfigure">Trocar de projeto Supabase</a>
-    </p>
-  </div>
-</div>
+<main id="tela"></main>
 
-<div id="app-shell" style="display:none;">
-<div class="app">
+<script>
+/* ============ dados ============ */
+var BRUTO = `
+#CERVEJA 350
+AMSTEL 350=UNIDADE~4;EMBALAGEM COM 12~45
+ANTARCTICA PILSEN 350=UNIDADE~4;EMBALAGEM COM 12~44
+ANTARCTICA SUBZERO 350=UNIDADE~4;EMBALAGEM COM 12~44
+BADEN BADEN PEACH 350=UNIDADE~6;EMBALAGEM COM 6~34
+BADEN BADEN IPA 350=UNIDADE~6;EMBALAGEM COM 6~34
+BADEN BADEN CRISTAL 350=UNIDADE~6;EMBALAGEM COM 6~34
+BECKS 350=UNIDADE~6;EMBALAGEM COM 8~46
+BOHEMIA 350=UNIDADE~4.5;EMBALAGEM COM 12~50
+BRAHMA CHOPP 350ML=UNIDADE~4;EMBALAGEM COM 12~45;EMBALAGEM COM 18~66
+BRAHMA DUPLO MALTE 350=UNIDADE~4.5;EMBALAGEM COM 12~50
+BRAHMA MALZBIER 350=UNIDADE~6;EMBALAGEM COM 12~65
+BRAHMA ZERO 350=UNIDADE~4.5;EMBALAGEM COM 12~46
+BUDWEISER 350=UNIDADE~5;EMBALAGEM COM 12~52
+BUDWEISER ZERO 350=UNIDADE~5;EMBALAGEM COM 8~35
+CARACU 350=UNIDADE~6;EMBALAGEM COM 12~65
+COLORADO RIBEIRÃO 350ML=UNIDADE~7.5;EMBALAGEM COM 8~58
+COLORADO APPIA 350ML=UNIDADE~7.5;EMBALAGEM COM 8~58
+CORONA 350ML=UNIDADE~6.5;EMBALAGEM COM 8~50
+CORONA ZERO 350ML=UNIDADE~6.5;EMBALAGEM COM 8~50
+EISENBAHN 350ML=UNIDADE~4.5;EMBALAGEM COM 12~49
+HEINEKEN 350ML=UNIDADE~6;EMBALAGEM COM 12~65
+HEINEKEN ZERO ALCOOL 350ML=UNIDADE~6;EMBALAGEM COM 12~65
+IMPERIO 350ML=UNIDADE~3.5;EMBALAGEM COM 12~38
+ITAIPAVA 350ML=UNIDADE~3.5;EMBALAGEM COM 12~34
+MICHELOB 350ML=UNIDADE~6;EMBALAGEM COM 8~42
+ORIGINAL 350ML=UNIDADE~5;EMBALAGEM COM 12~58
+PATAGONIA AMBER 350ML=UNIDADE~7.5;EMBALAGEM COM 8~56
+PETRA 350ML=UNIDADE~3.5;EMBALAGEM COM 12~40
+SPATEN 350ML=UNIDADE~5;EMBALAGEM COM 12~59
+SKOL ZERO 350ML=Unidade~4;Embalagem com 12~46
+SKOL 350ML=UNIDADE~4;EMBALAGEM COM 12~44
+STELLA ARTOIS 350ML=UNIDADE~6;EMBALAGEM COM 8~44
+STELLA GOLD 350ML=UNIDADE~6.5;EMBALAGEM COM 8~47
+#CERVEJAS 269
+AMSTEL 269ML=UNIDADE~3.5;EMBALAGEM COM 12~37
+ANTARCTICA PILSEN 269ML=UNIDADE~3;EMBALAGEM COM 15~45
+BRAHMA CHOPP 269ML=UNIDADE~3;EMBALAGEM COM 15~45
+BRAHMA DUPLO MALTE 269ML=UNIDADE~3.5;EMBALAGEM COM 15~50
+BUDWEISER 269ML=UNIDADE~4;EMBALAGEM COM 8~28;EMBALAGEM COM 15~48
+BURGUESA 269ML=UNIDADE~2.5;EMBALAGEM COM 12~30
+CORONA 269=UNIDADE~5.5;EMBALAGEM COM 8~40
+EISENBAHN 269ML=UNIDADE~3.5;EMBALAGEM COM 12~37
+HEINEKEN 269ML=UNIDADE~5;EMBALAGEM COM 8~37
+HEINEKEN ZERO 269=UNIDADE~5;EMBALAGEM COM 8~37
+IMPERIO 269ML=UNIDADE~3;EMBALAGEM COM 12~32;EMBALAGEM COM 15~40
+ITAIPAVA 269ML=UNIDADE~3;EMBALAGEM COM 12~30
+MICHELOB 269ML=UNIDADE~3.5;EMBALAGEM COM 8~32
+ORIGINAL 269ML=UNIDADE~4;EMBALAGEM COM 15~55;EMBALAGEM COM 8~32
+PETRA 269ML=UNIDADE~3;EMBALAGEM COM 12~32
+SKOL PILSEN 269ML=UNIDADE~3;EMBALAGEM COM 15~43
+SPATEN 269ML=UNIDADE~4;EMBALAGEM COM 8~32
+STELLA ARTOIS 269ML=UNIDADE~4.5;EMBALAGEM COM 8~35
+STELLA GOLD 269ML=UNIDADE~5;EMBALAGEM COM 8~37
+#CERVEJAS 300
+ANTARCTICA 300ML=UNIDADE~3;CAIXA COM 24~65;1/2 CAIXA~32.5
+BRAHMA CHOPP 300=UNIDADE~3;CAIXA COM 24~65;1/2 CAIXA~32.5
+SKOL PILSEN 300=UNIDADE~3;CAIXA COM 24~65;1/2 CAIXA~32.5
+BUDWEISER 300ML=UNIDADE~3.5;CAIXA COM 24~77;1/2 CAIXA~38.5
+BRAHMA DUPLO MALTE 300=UNIDADE~3.5;CAIXA COM 24~77;1/2 CAIXA~38.5
+ORIGINAL 300=UNIDADE~4;CAIXA COM 24~85;1/2 CAIXA~40
+#CERVEJAS LATÃO/600ML
+BRAHMA CHOPP 473ML=UNIDADE~5.5;EMBALAGEM COM 12~58
+BOHEMIA 473=UNIDADE~5.5;CAIXA COM 12~60
+SKOL PILSEN 473ML=UNIDADE~5.5;EMBALAGEM COM 12~58
+COLORADO APPIA 600ML=UNIDADE~16;EMBALAGEM COM 12~182
+COLORADO RIBEIRÃO 600ML=UNIDADE~16;EMBALAGEM COM 12~182
+HEINEKEN 600 - SOMENTE LIQUIDO=UNIDADE~11;CAIXA COM 24~245
+ORIGINAL 600ML VASILHAME INCLUSO=UNIDADE~11;CAIXA COM 12~125
+ORIGINAL 600ML - SOMENTE LÍQUIDO=UNIDADE~9.5;CAIXA COM 24~215
+SPATEN 600ML VASILHAME INCLUSO=UNIDADE~11;CAIXA COM 12~125
+SPATEN 600ML- SOMENTE LIQUIDO=UNIDADE~9.5;CAIXA COM 24 UNIDADES~215
+SERRAMALTE 600ML - RETORNAVEL=UNIDADE~9.5;CAIXA COM 24~215
+#CERVEJAS LONG NECK
+AMSTEL ULTRA 330ml=UNIDADE~6;PACK COM 6~35
+BECKS 330=UNIDADE~8;PACK COM 6~42
+BRAHMA MALZBIER 355ML=UNIDADE~6.5;PACK COM 6~37
+BUDWEISER ALUMUNIO COPA=~7.99
+BUDWEISER 330=UNIDADE~6;PACK COM 6~34
+BUDWEISER ZERO 330=UNIDADE~6;PACK COM 6~34
+CORONA 330=UNIDADE~8;PACK COM 6~45
+CORONA CERO 330=UNIDADE~8;PACK COM 6~45
+CORONITA 210=UNIDADE~6;PACK COM 6~33
+HEINEKEN 330=UNIDADE~7;PACK COM 6~40
+IMPERIO ULTRA 275ML=UNIDADE~6;PACK COM 6~32
+HEINEKEN ZERO 330=UNIDADE~7;PACK COM 6~40
+MICHELOB 330=UNIDADE~6.5;PACK COM 6~38
+PATAGONIA AMBER 355=UNIDADE~8.5;CAIXA COM 12~96
+SPATEN 330=UNIDADE~6.5;PACK COM 6~36
+STELLA ARTOIS 330=UNIDADE~7;PACK COM 6~40
+STELLA GOLD 330=UNIDADE~7.5;PACK COM 6~42
+#DRINKS PRONTOS
+51 ICE 275ML=UNIDADE~6;PACK COM 6~35+
+BRUTAL FRUT=UNIDADE~12;PACK COM 6~62
+BEACH'S=LIMÃO~7.5;TROPICAL~7.5
+CHEVETT=~8
+FLYING 350ML=~6
+FLYING 330ML=~7
+ICE CABARE=UNIDADE~8;PACK COM 6~45+
+MASCATE=MARACUJA~9.5;FRAMBOESA~9.5
+MIKES 275 (LONG)=UNIDADE~8;PACK COM 6~45+
+BEATS GT(LATA)=UNIDADE~6.5;EMBALAGEM COM 8~50
+BEATS GT (LONG)=UNIDADE~8;PACK COM 6~47
+BEATS SENSE (LATA)=UNIDADE~6.5;EMBALAGEM COM 8~50
+BEATS SENSE (LONG)=UNIDADE~8;PACK COM 6~47
+BEATS TROPICAL (LATA)=UNIDADE~6.5;EMBALAGEM COM 8~50
+BEATS TROPICAL (LONG)=UNIDADE~8;PACK COM 6~47
+BEATS RED MIX (LATA)=UNIDADE~6.5;EMBALAGEM COM 8~50
+BEATS RED MIX (LONG)=UNIDADE~8;EMBALAGEM COM 6~47
+BEATS GREEN (LATA)=~6.5
+BEATS GREEN (LONG)=UNIDADE~8;PACK COM 6~47
+SMIRNOFF ICE 275 (LONG)=UNIDADE~8;PACK COM 6~45
+SMIRNOFF ICE 269(LATA)=UNIDADE~6.5;EMBALAGEM COM 6UN~36
+XEQUE MATE 355=UNIDADE~9.5;EMBALAGEM COM 12~100
+#ENERGETICOS
+BALY 2L=UNIDADE~12;PACOTE COM 6~55+
+BALY 473ML=MORANGO E PESSEGO~6;MANGO~6;TRADICIONAL~6;MORANGO E PESSEGO~6;ABACAXI C HORTELA~6;COCO COM AÇAI~6
+FUSION 1LT=UNIDADE~7.5;PACOTE COM 6~45
+FUSION 2LTS=UNIDADE~12;PACOTE COM 6~54
+FUSION 473=UNIDADE~6;PACOTE COM 12~62
+MONSTER 473=UNIDADE~10;PACOTE COM 6~58+
+REDBULL 250=~9+
+REDBULL 355=~12
+REDBULL 473=~14
+VIBE 2LTS=UNIDADE~12;EMBALAGEM COM 6~50
+#AGUA, SUCO E ISOTONICOS
+AGUA DE COCO 1L=PURO COCO 1L~14;TIAL 1L~14;KERO COCO 1L~14;KERO COCO 200ML~4;KERO COCO 330ML~6;DUCOCO 200ML~3
+AGUA COM GAS MINALBA 510ML=UNIDADE~3.5;EMBALAGEM COM 12~28
+AGUA COM GAS MINALBA 1,5L=UNIDADE~4.5;EMBALAGEM COM 6~25
+AGUA SEM GAS FRESCCA 1,5L=~4
+AGUA SEM GAS MINALBA 510ML=UNIDADE~2.5;EMBALAGEM COM 12~22
+AGUA SEM GAS FRESCCA 510ML=Pequeno~2;Médio~14
+CHA LIPTON 1,5L=LIMÃO~8;PESSEGO~8
+GATORADE ZERO 350ML=LARANJA~4.5;FRUTAS SILVESTRE~4.5
+DEL VALLE 1L=~10+
+DEL VALLE 200ML=~3+
+DEL VALLE 290ML=UVA~4;MARACUJA~4;MANGA~4;PESSEGO~4
+GATORADE=~6+
+GUARAVITON=AÇAI~3;GINSENG~3
+H2O 1,5L=LIMÃO~9;LIMONETO~9
+H2O 500ML=LIMONETO~5;LIMÃO~5
+H2O 350ML LIMONETO=~4
+MAGUARY 1L=MARACUJA~7;CAJU~7;ABACAXI~7;LARANJA~7;UVA~7;MORANGO~7
+MARATA 1L=GOIABA~7;LARANJA~7;ABACAXI~7;CAJU~7;UVA~7;MARACUJA~7;MANGA~7
+SUCO MID BAUNILHA COM LIMÃO=~2
+TONICA 350ML=~3.5+
+TIAL=ABACAXI~8;LARANJA~8;MARACUJA~8;PESSEGO~8;UVA~8
+#REFRIGERANTES
+COCA COLA=1L~9;2LTS~13;200ML~3;350ML~4.5;600ML~7;RETORNAVEL~8.5;ZERO 1L~9;ZERO 2LTS~13;ZERO RETORNAVEL~8.5;ZERO 600ML~7;ZERO 350ML~4.5;ZERO 200ML~3
+CONVENÇÃO 2LTS=~7+
+FANTA 2LTS=UVA~10;LARANJA~10
+FANTA 350ML=UVA~4.5;LARANJA~4.5
+FANTA RETORNAVEL=UVA~8.5;LARANJA~8.5
+GUARANÁ ANTARCTICA=1LT~5;2LTS~10;ZERO 2LTS~10;200ML~3;350ML~4.5;ZERO 350ML~4.5;ZERO 200ML~3
+ITUBAINA DO PRIMO=2L~6;350ML~3.5
+PEPSI=BLACK 2LTS~9.5;COLA 2LTS~9.5;TWIST 2LTS~9.5;COLA 350ML~4.5;BLACK 350ML~4.5;TWIST 350ML~4.5;COLA 200ML~3;BLACK 200ML~3
+SCHWEPPES=350ML~4.5;1,5L~9.5
+SODA=2LTS~9.5;ZERO 2LTS~9.5;350ML~4.5;ZERO 350ML~4.5
+SPRITE=2LTS~10;ZERO 2LTS~10;350ML~4.5
+SUKITA 2LTS=LARANJA~7;UVA~7;ITUBAINA~7;LIMÃO~7
+SUKITA 350ML=UVA~3.5;LARANJA~3.5
+#VINHOS
+ALECRIM=BRANCO~32;ROSE~32;TINTO~32
+BELA VISTA BORDO 1L=~14
+CANTINHO DO VALE=2L~10;880ML~5
+CASAL GARCIA=VINHO ROSE~65;VINHO TINTO~65;VINHO VERDE~65;SWEET~65;VINHO TINTO(SWEET RED)~65
+CASILLERO DEL DIABLO=CABERNET~42;ROSE~42;CARMENERE~42
+CHAC CHAC=TINTO MALBEC~45;BRANCO SAUVIGNON BLANC~45
+CHALISE TINTO SUAVE 750ML=~14
+DOM BOSCO TINTO SUAVE 750ML=~14
+DRAFT=VINHO TINTO~12;VINHO BRANCO~12;PESSEGO~12;ICE~12
+FOYE 750ML=BRANCO~35;TINTO~35
+GALIOTO 1L=~26
+GATO NEGRO=CABERNET~36;CARMENERE~36
+JURUPINGA=~30
+NATAL 1L=SUAVE~20;SECO~20
+NOVECENTO=MALBEC~30;CABERNET~30
+PERGOLA 1L=TINTO SUAVE~24;TINTO SECO~24;BRANCO SUAVE~26;BRANCO SECO~26
+PINK MOON=~10
+RENO CABERNET=~28
+RESERVADO CONCHA Y TORO=CABERNET~28;CARMENERE~28;SAUVIGNON BLANC~28;RED~28;ROSE~28;MERLOT~28;MALBEC~28;CHARDONNAY PJ~28
+SANTOME 1L=SUAVE~20;SECO~20;BORDO~21
+VINHO DO ZÉ=BRANCO~30;TINTO~30;ROSE~30
+#ESPUMANTES
+CHANDON RESERVE BRUT 750=~90
+ESPUMANTE DO ZÉ=BRUT~35;ROSE~35
+GOTA DO VALE=~14
+SALTON=BRUT~38;ROSE~38;MOSCATEL~38;MOSCATEL ROSE~38
+LIDER=PRATA~14;ROSE~14;MAÇA~14
+CERESER=~18
+#LICORES, TEQUILA E RUM
+AMARULA 750ML=~115
+LICOR 43=~160
+LICOR 43 CHOCOLATE=~240
+LICOR BAILEYS 750=~120
+LICOR BALLENA=~120
+LICOR BARDERA=DOCE DE LEITE~60;BANOFFE~60
+LICOR GOLF=CACAU~26;MENTA~26
+LICOR TOTUS=CACAU~23;MENTA~23
+LICOR DON LUIZ=~75
+LICOR LAMBUZZA DOCE DE LEITE=~50
+LICOR STOCK=BLUEBERRY~45;MENTA~45;MORANGO~45
+RUM MALIBU=~55
+TEQUILOKA OURO=~22
+TEQUILA JOSE CUERVO=PRATA~115;OURO~115
+#CACHAÇAS E APERITIVOS
+APERITIVO APEROL=~58
+BANANINHA REGGIANI=~23
+APERITIVO CAMPARI=998ML~53;748ML~48
+BUSCA VIDA=~80
+BUSCA BRISA=~30
+BOB PINGA=~19
+CACHAÇA CABARÉ=AMBURANA~45;PRATA~37;OURO~37;FIRE~42
+CABARE PREMIUM=~360
+CACHAÇA 51=965ML~13;350 ML~6
+CACHAÇA VELHO BARREIRO=~14
+CANELINHA DA ROCHA=~14
+CONTINI=BRANCO~28;TINTO~28
+CYNAR=~25
+CONHAQUE DOMECQ=~36
+CONHAQUE DREHER=~21
+DUELO=LIMÃO~4;MARACUJA~4
+FERNET DUBAR=~28
+GROSELHA CACHOEIRA=~13
+KARIRI=~17
+LEÃO DO NORTE=~14
+MONTILA=OURO~28;CARTA BRANCA~28
+PARATUDO=~14
+PITU 350=TRADICIONAL~6;LIMÃO~6;MEL E LIMÃO~6;CAJU~7;BANANA~7
+PITU TRADICIONAL 965ML=~13
+SAGATIBA=~35
+SALINAS 600ML=TRADICIONAL~48;UMBURANA~42
+SÃO FRANSCISCO=~28
+SÃO JOÃO DA BARRA=~20
+SELETA=1L~48;600ML~37
+CATUABA SELVAGEM=TRADICIONAL~16;AÇAI~16
+XAROPE MEL ITAJAÍ 1,25KG=~10
+YPIOCA=OURO~22;PRATA~22;OURO COM PALHA~48
+#GIN
+BEEFEATER BLACKBERRY=~110
+BEEFEATER LONDON 750ML=~90
+BEEFEATER PINK 750ML=~95
+BOMBAY SAPPHIRE 750ML=~90
+ETERNITY 900ML=WATERMELON~22;STRABERRY~22;MAÇA VERDE~22;ABABACAXI COM HORTELÃ~0;ROYALE~22;COCO COM AÇAI~22;TROPICAL~22;TRADICIONAL~22;PESSEGO COM FRAMBOESA~22
+GORDONS 750ML=~65
+INTENCION=STRABERRY~22;WATERMELON~22;TRADICIONAL~22;TROPICAL~22;MORANGO E PESSEGO~22
+LARIOS ROSE=~50
+ROCKS 1L=DRY~32;STRABERRY~32
+SEAGERS 980ML=~40
+TANQUERAY 750ML=~110
+TANQUERAY ROYALLE=~130
+#COMBO GIN
+COMBO BEEFEATER LONDON 750=RB~145;EN~105@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BEEFEATER LONDON REDBULL
+COMBO BEEFEATER PINK 750ML=RB~150;EN~110@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BEEFEATER PINK REDBULL
+COMBO BEEFEATER BLACKBERRY 750ML=RB~160;EN~125@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BEEFEATER BLACKBERRY REDBULL
+COMBO BOMBAY SAPPHIRE 750ML=RB~145;EN~115@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BOMBAY REDBULL
+COMBO ETERNITY 900ML=RB~75;EN~45@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ETERNITY REDBULL
+COMBO GORDONS 750ML=RB~120;EN~85@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO GORDONS REDBULL
+COMBO INTENCION 900ML=RB~70;EN~40@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO INTENCION REDBULL
+COMBO LARIOS ROSE 700ML=RB~100;EN~70@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO LARIOS ROSE REDBULL
+COMBO ROCKS 1L=RB~90;EN~55@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ROCKS REDBULL
+COMBO SEAGERS 998ML=RB~90;EN~60@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO SEAGERS REDBULL
+COMBO TANQUERAY 750ML=RB~160;EN~130@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO TANQUERAY REDBULL
+COMBO TANQUERAY ROYALLE=RB~185;EN~155@@@COMBO TANQUERAY ROYALLE REDBULL
+#VODKAS
+ABSOLUT TRAD 1L=~75
+ASKOV TRADICIONAL 1L=~16
+ASKOV SABORES=~16+
+CIROC RED BERRY 750ML=~210
+CIROC TRADICIONAL 750ML=~160
+GREY GOOSE=TRADICIONAL~120;CITRON E PERA~148;MORANGO~148;MELANCIA~148
+ORLOFF 1L=~28
+SMIRNOFF 998ML=998ML~37;600ML~23
+SMIRNOFF VODKA WATERMELON=~48
+SAQUE AZUMA=SOFT 740ML~30;TRADICIONAL~20
+#COMBO VODKAS
+COMBO ABSOLUT 1L=RB~130;EN~100@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ABSOLUT REDBULL
+COMBO ASKOV TRADICIONAL=RB~70;EN~35@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ASKOV TRADICIONAL REDBULL
+COMBO ASKOV SABORES=RB~70;EN~35@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ASKOV SABORES REDBULL
+COMBO CIROC RED BERRY=RB~265;EN~230@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO CIROC RED BERRY REDBULL
+COMBO CIROC TRADICIONAL=RB~210;EN~180@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO CIROC TRADICIONAL REDBULL
+COMBO GREY GOOSE=RB§TRADICIONAL~165;RB§CITRON E PERA~198;RB§LARANJA~198;RB§MORANGO~198;RB§MELANCIA~198;EN§TRADICIONAL~135;EN§CITRON E PERA~168;EN§LARANJA~168;EN§MORANGO~168;EN§MELANCIA~168@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO GREY GOOSE REDBULL
+COMBO VODKA ORLOFF=RB~80;EN~50@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO ORLOFF REDBULL
+COMBO SMIRNOFF=RB§998ML~90;RB§WATERMELON~100;RB§600ML~75;EN§998ML~60;EN§WATERMELON~65;EN§600ML~45@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO SMIRNOFF REDBULL
+#WHISKY
+BALLANTINES FINEST 1L=~75
+BALLANTINES 12 ANOS=~205
+BALLANTINES SUSHINE=~65
+BELLS 700ML=~45
+BLACK & WHITE 1L=~85
+BUCHANAN'S 12 ANOS 1L=~180
+CHIVAS 12 ANOS 1L=~125
+COCKLAND 1L=~40
+JACK DANIELS 1L=TRADICIONAL~145;HONEY~145;FIRE~145;APPLE~150;BLACKBERRY~175
+JACK DANIELS 700ML=TRADICIONAL~105;APPLE~120;HONEY~100
+JACK DANIELS GENTLEMAN=~195
+JACK DANIELS 375ML=TRADICIONAL~60;HONEY~65
+JAMESON IPA 750ML=~95
+JIM BEAM 1L=BOURBON~90;APPLE~90
+JW BLACK LABEL=~180
+JW BLOND 750ML=~75
+JW DOUBLE BLACK=~230
+JW GOLD LABEL 1L=~260
+JW GREEN LABEL 1L=~385
+JW RED LABEL=1L~90;500ML~50
+OLD PARR 12 ANOS 1L=~150
+PASSPORT=~45
+WHITE HORSE 1L=~70
+WHITE HORSE 500ML=~42
+#COMBO WHISKY
+COMBO BALLANTINES FINEST=RB~130;EN~95@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BALLANTINES FINEST REDBULL
+COMBO BALLANTINES 12 ANOS=RB~260;EN~225@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BALLANTINES 12 REDBULL
+COMBO BALLANTINES SUSHINE=RB~120;EN~90@@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BALLANTINES SUSHINE REDBULL
+COMBO BELLS=RB~95;EN~65@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BELLS REDBULL
+COMBO BLACK & WHITE 1L=RB~130;EN~105@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BLACK & WHITE 1L REDBULL
+COMBO BUCHANANS 12 ANOS=RB~230;EN~200@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO BUCHANANS 12A REDBULL
+COMBO CHIVAS 12 ANOS=RB~185;EN~145@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO CHIVAS 12A REDBULL
+COMBO COCKLAND=RB~90;EN~60@@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO COCKLAND RED BULL
+COMBO JACK DANIELS 1L=RB§TRADICIONAL~225;RB§HONEY~225;RB§FIRE~225;RB§APPLE~240;EN§TRADICIONAL~165;EN§APPLE~170;EN§HONEY~165;EN§FIRE~165@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO JACK DANIELS 1L REDBULL
+COMBO JACK DANIELS 700ML=RB§APPLE~170;RB§TRADICIONAL~155;RB§HONEY~155;EN§APPLE~125;EN§HONEY~125;EN§TRADICIONAL~125@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO JACK DANIELS 700ML RED BULL
+COMBO JACK DANIELS 375ML=RB§TRADICIONAL~90;RB§HONEY~100;EN§TRADICIONAL~80;EN§HONEY~85@3 REDBULL 250 + 3 GELOS + 3 COPOS 770@1 ENERGETICO 1L + 3 GELOS + 2 COPOS 770@COMBO JACK DANIELS 375 REDBULL
+COMBO JACK DANIELS GENTLEMAN=RB~250;EN§Pequeno~215;EN§Médio~0@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO JACK DANIELS GENT REDBULL
+COMBO JIM BEAM=RB§BOURBON~145;RB§APPLE~145;EN§BOURBON~110;EN§APLLE~110@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO JIM BEAM REDBULL
+COMBO WHISKY JOHNNIE WALKER=RB§BLACK LABEL 1L~225;RB§BLOND 750ML~135;RB§DOUBLE BLACK 1L~265;RB§GOLD LABEL 1L~300;RB§GREEN LABEL 1L~435;RB§RED LABEL 1L~140;EN§BLACK LABEL 1L~200;EN§BLOND 750ML~90;EN§DOUBLE BLACK 1L~250;EN§GOLD LABEL 1L~280;EN§GREEN LABEL 1L~455;EN§RED LABEL 1L~110@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO WHISKY JOHNNIE WALKER REDBULL
+COMBO RED LABEL 500ML=RB~85;EN~70@3 REDBULL 250 + 3 GELOS + 3 COPOS 770@1 ENERGETICO 1L + 3 GELOS + 3 COPOS 770@COMBO RED LABEL 500ML RED BULL
+COMBO OLD PARR 12 ANOS=RB~200;EN~170@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO OLD PARR 12A REDBULL
+COMBO PASSPORT=RB~100;EN~65@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO PASSPORT REDBULL
+COMBO WHITE HORSE 1L=RB~130;EN~90@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770@COMBO WHITE HORSE 1L RED BULL
+COMBO WHITE HORSE 500ML=RB~80;EN~62@3 REDBULL 250 + 3 GELOS + 3 COPOS 770@1 ENERGETICO 1L + 3 GELOS + 3 COPOS 770@COMBO WHITE HORSE 500ML RED BULL
+COMBO BLACK & WHITE 700 REDBULL=RB~100@5 REDBULL 250 + 5 GELOS + 3 COPOS 770@
+#TABACARIA
+ALUMINIO=UNIDADE~0.5;CAIXA C/ 25 FOLHAS~9;CAIXA COM 50 FOLHAS~12
+BORRACHAS PARA NARGUILE=PARA MANGUEIRA~3;PARA VASO~5;PARA ROSH~3.5
+CARVÃO NARGUILE=UNIDADE~1;FUMAX 1KG~30;ESCAPE 1KG~28
+CUIA SILICONE=~12
+DICHAVADOR=ACRILICO~12;FIBRA~5
+ESSENCIA ADALYA LOVE 66=~18
+ESSENCIA NAY=~12+
+ESSENCIA ONIX=~12+
+ESSENCIA ZIGGY=~12+
+ESSENCIA ZOMO=~10+
+FILTRO=SADHU~7;PAPELITO LONGO~8;PAPELITO ULTRA LONGO~9;THE OG~7;PALMER~6.5
+FOGAREIRO 110V=PEQUENO~25;MEDIO~35
+FURADOR=~7
+ISQUEIROS=PARALELOS FAISCA~2.5;BIC MAXX~6;BIC MINI~4;CLIPPER PEQUENO~4;CLIPPER GRANDE~6
+MINI MAÇARICO=~12
+NARGUILE POCKET=~145
+PALHEIRO TERRA TOMBADA=~7.5+
+PITEIRA=BEM BOLADO~3;MIRAGE LONGA~4;MIRAGE MEGA LONGA~5
+PITEIRA DE VIDRO=~6
+ROSH=~25
+SEDA ALEDA CELULOSE=~4
+SEDA BROSS 66=~4
+SEDA PAPELITO BROWN=~5
+SEDA SMOKING=BROWN KING SIZE~6;DELUXE KING SIZE~6;MASTER KING SIZE~6
+SEDA ZOMO=NATURAL PERFECT~3;NATURAL PERFECT SLIM~3;PERFECT BLACK~3;SLIM~3;ALFAFA~4
+TABACOS=BEHAPPY~12;TA NA MÃO~12;MARAJO~12;ACREMA~16;AMSTERDAN~15;RAIBOW~16;MIRAGE GOLD~17;ORIGINAL~12;MIRAGE WHIT CREAM~17
+TESOURINHA=SEM PONTA~10;OCULOS~15
+VASO=~20
+MANGUEIRA SILICONE=~18
+#DIVERSOS
+BARALHO COPAG 139=VERMELHO~15;AZUL~15
+CARVÃO SÃO JOSÉ=2KG~17;4KG~32
+COPO 770=UNIDADE~0.5;PACOTE C/ 50~20;PACOTE C/ 25~12
+DOMINÓ OSSO=~22
+LEITE CONDESADO PIRACANJUBA 395G=~7
+SAL REFINADO 1KG=~2.5
+SAL GROSSO 1KG=~4.5
+#CHOCOLATES E BALAS
+CHOCOLATE BATON 16G=BRANCO~2;PRETO AO LEITE~2;PRETO RECHEADO COM CREME~2;BATON RECHEADO MORANGO~2
+CHOCOLATE BIS XTRA 34G=~4
+CHOCOLATE KIT KAT 41,5=PRETO~4;BRANCO~4;DARK~4
+CHOCOLATE NESTLE=CLASSIC AO LEITE 80G~10;TRIO CHOCOLATE~10;TRIO AMENDOIM~10;TRIO COOKIES & CREAM~10;TRIO NEGRESCO~10;TRIO AVELÃ~10;TRIO BONO~10;TRIO PRESTIGIO~10;GALAK 80G~10;NESTLE DIPLOMATA 80G~10
+CHOCOLATE SUFLAIR 50G=~6
+CHOCOLATE TRENTO 32G=TORTA DE LIMAO~2.5;MOUSE DE MARACUJA~2.5;CHEESCAKE DE MORANGO~2.5;CHOCOLATE~2.5;PRETO DARK~2.5;BRANCO DARK~2.5;AVELA~2.5;MILK~2.5;MORANGO~2.5
+HALLS=CEREJA~2;MENTA~2;MENTOL~2;EXTRA FORTE~2;MORANGO~2
+TRIDENT=MENTA~2.5;HORTELA~2.5;MORANGO~2.5;MELANCIA~2.5;TUTTI FRUT~2.5
+BALA HARIBO=~6+
+#SALGADINHOS/AMENDOIM
+DORITOS=QUEIJO NACHO 120G~14.99;QUEIJO NACHO 75G~9.99;QUEIJO NACHO 37G~4.99;SWEET CHILI 37G~4.99
+CEBOLITOS=91G~9.99;36G~4.49
+FANDANGOS=PRESUNTO 85G~8.99;PRESUNTO 37G~3.49;QUEIJO 37G~3.49;CHURRASCO 37G~3.49
+CHEETOS=ONDA 90G~9.99;LUA 80G~9.99;MIX 34G~3.99;ONDA 39G~3.99;LUA PARMESÃO 34G~3.99
+BACONZITOS=86G~9.99;34G~4.49
+RUFFLES=ORIGINAL 68G~9.49;ORIGINAL 32G~4.49;CEBOLA E SALSA 68G~9.49;CEBOLA E SALSA 32G~4.49;CHURRASCO 68G~9.49;CHURRASCO 32G~4.49
+LAYS=LAYS CLASSIC 62G~9.99;LAYS SOUR CREAM 62G~9.99;PICANHA 62G~9.99;TACO MEXICANO 62G~9.99
+FOFURA 60G=REQUEIJÃO~3;QUEIJO~3;PRESUNTO~3;CHURRASCO~3;CEBOLA~3
+TORCIDA 60G=QUEIJO~2.5;CEBOLA~2.5;PIMENTA MEXICANA~0.99;CHURRASCO~2.5;COSTELINHA COM LIMÃO~2.5;BACON~2.5;PÃO DE ALHO~2.5
+AMENDOIM JAPONES ELMA CHIPS 145G=~8.49
+OVINHO ELMA CHIPS=65G~3.99;145G~8.49
+AMENDOIM SEM PELE 100G=~8.49
+AMENDOIM  BRASIL SNACKS=OVINHO 80G~5;BACON 80G~5;CEBOLA E SALSA 80G~5;JAPONES~5;COM PELE SALGADO 80G~5;CROCANTE 80G~5;SEM PELE COM ALHO 80G~5;DOCE PRALINE 80G~5;PICANTE 80G~5;CHURRASCO 80G~5;SEM PELE TORRADO E SALGADO 80G~5
+#GELOS
+GELOS SABORES=~2.5+
+GELO 5KG=~14
+#CIGARROS
+DUNHILL CARLTON=RED~17.75;BLUE~17.75
+MARLBORO=VERMELHO~17.75;GOLD~17.75;ICE BURST (BLUE ICE)~17.75;TROPICAL FUSION (MELANCIA E MENTA)~18.25;FOREST FUSION (FRUTAS SILVESTRES)~18.25
+CAMEL=DOUBLE MINT(AMORA)~17.75;DOUBLE PURPLE~17.75;KRETEK~18.75;BLUE~14.75;YELLOW~14.75
+GUDANG CRAVO=~25
+LA MENTA=~20.75
+DJARUM BLACK=CRAVO~23.25;MENTA~23.25;ICE~23.25
+CHESTERFIELD=ORIGINAL(VERMELHO)~13.25;BLUE~13.25;REMIX BEATS~14;REMIX PURPLE~14;REMIX WILD~14;REMIX FRESH E MINT~14
+ROTHMANS OF LONDON=AZUL~12.5;VERMELHO~12.5;PRATA~12.5;CLICK SENSE~13.5;DOUBLE CLICK~13.5
+LM FIRST CUT=AZUL~11.5;VERMELHO~11.5
+WINSTON=AZUL FLORZINHA~11.5;VERMELHO FLORZINHA~11.5
+ROTHMANS GLOBAL=AZUL~11.5;VERMELHO~11.5
+`;
+var DOSES = `
+GIN BEEFEATER=20;25;30
+GIN BEEFEATER PINK=20;25;30
+GIN ETERNITY=7;12;17
+GIN GORDONS=15;20;25
+GIN INTENCION=7;12;17
+GIN ROCKS=10;15;20
+GIN TANQUERAY=25;30;35
+LICOR MALIBU=11;16;24
+VODKA ABSOLUT=15;20;25
+VODKA ASKOV=5;10;15
+VODKA CIROC RED BERRY=45;50;60
+VODKA ORLOFF=10;15;20
+VODKA SMIRNOFF=10;15;20
+WHISKY BALLANTINES 12 ANOS=35;40;45
+WHISKY BALLANTINES FINEST=15;20;25
+WHISKY BELLS=9;14;22
+WHISKY BLACK & WHITE=15;20;25
+WHISKY BLACK LABEL=30;35;40
+WHISKY BUCHANANS=30;35;40
+WHISKY CHIVAS=25;30;35
+WHISKY COCKLAND=7;12;22
+WHISKY DANIELS=30;35;40
+WHISKY DOUBLE BLACK=40;45;50
+WHISKY JIM BEAM=15;20;28
+WHISKY OLD PARR=30;35;40
+WHISKY PASSPORT=10;15;20
+WHISKY RED LABEL=15;20;28
+WHISKY WHITE HORSE=15;20;25
 
-  <header class="top">
-    <div>
-      <p class="eyebrow" data-i18n="app.eyebrow">Freelancer · Turnos &amp; Ganhos</p>
-      <h1 data-i18n="app.name">Painel de Ganhos</h1>
-    </div>
-    <div class="topbar-account">
-      <span id="sync-indicator"><span class="dot"></span><span data-i18n="top.syncing">sincronizando</span></span>
-      <button type="button" class="secondary ghost" id="btn-install" data-i18n="install.btn" style="display:none;">Instalar app</button>
-      <button type="button" class="icon-btn" id="btn-shortcuts" data-i18n-title="sc.title" aria-label="Atalhos de teclado">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
-      </button>
-      <button type="button" class="icon-btn" id="btn-toggle-privacy" data-i18n-title="top.privacy" aria-label="Mostrar/ocultar valores" aria-pressed="false"></button>
-      <span id="account-email"></span>
-      <button type="button" class="secondary" id="btn-logout" data-i18n="top.logout">Sair</button>
-    </div>
-  </header>
+`;
 
-  <div class="top tabs-row">
-    <nav class="tabs" role="tablist" aria-label="Seções do painel">
-      <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="resumo" data-i18n="nav.resumo">Resumo</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="calendario" data-i18n="nav.calendario">Calendário</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="lancamentos" data-i18n="nav.lancamentos">Lançamentos</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="parametros" data-i18n="nav.parametros">Parâmetros</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="objetivos" data-i18n="nav.objetivos">Objetivos</button>
-      <button type="button" class="tab" role="tab" aria-selected="false" data-tab="config" data-i18n="nav.config">Config</button>
-    </nav>
-  </div>
+var CAT = [];      /* [{nome, itens:[]}] */
+var TODOS = [];
 
-  <div id="offline-banner" role="status"><span class="dot"></span><span id="offline-banner-text"></span></div>
+(function montar(){
+  BRUTO.trim().split("#").slice(1).forEach(function(bloco){
+    var linhas = bloco.trim().split("\n");
+    var nomeCat = linhas[0].trim();
+    var itens = [];
+    linhas.slice(1).forEach(function(linha){
+      var i = linha.indexOf("=");
+      if (i < 0) return;
+      var nome = linha.slice(0, i), resto = linha.slice(i + 1);
+      var it;
 
-  <!-- ===================== RESUMO ===================== -->
-  <section id="panel-resumo" class="panel active" tabindex="-1">
-    <div class="stat-grid" id="stat-grid"></div>
+      if (resto.indexOf("@") >= 0) {                 /* combo unificado */
+        var pedacos = resto.split("@");
+        var vars = pedacos[0].split(";").map(function(v){
+          var t = v.split("~");
+          var cab = t[0];                            /* RB ou EN, opcional §sabor */
+          var g = cab.slice(0, 2);
+          var sabor = cab.indexOf("\u00a7") >= 0 ? cab.split("\u00a7")[1] : null;
+          return { grupo: g, sabor: sabor, preco: Number(t[1]) };
+        });
+        var descRB = pedacos[1] || null, descEN = pedacos[2] || null, busca = pedacos[3] || "";
+        var itBase = { cat: nomeCat, nome: nome, combo: true, vars: vars,
+                        descRB: descRB, descEN: descEN, busca: busca, extras: false, doses: false };
+        dividirComboPorRotulo(itBase).forEach(function(itFinal){ itens.push(itFinal); TODOS.push(itFinal); });
+        return;
+      } else {
+        var extras = resto.charAt(resto.length - 1) === "+";
+        if (extras) resto = resto.slice(0, -1);
+        var vs = resto.split(";").map(function(v){
+          var p = v.split("~");
+          return { rot: p[0], preco: Number(p[1]), fora: p[2] === "0" };
+        });
+        it = { cat: nomeCat, nome: nome, vars: vs, extras: extras, doses: false };
+      }
+      itens.push(it); TODOS.push(it);
+    });
+    if (itens.length) CAT.push({ nome: nomeCat, itens: itens });
+  });
 
-    <div class="period-grid" id="period-grid"></div>
+  var d = [];
+  DOSES.trim().split("\n").forEach(function(linha){
+    var i = linha.lastIndexOf("=");
+    if (i < 0) return;
+    var v = linha.slice(i + 1).split(";").map(Number);
+    var it = { cat: "DOSES", nome: linha.slice(0, i), doses: true, extras: false,
+      vars: [{rot:"Com Red Bull",preco:v[2]},{rot:"Com Vibe/Baly",preco:v[1]},{rot:"Pura",preco:v[0]}] };
+    d.push(it); TODOS.push(it);
+  });
+  if (d.length) CAT.unshift({ nome: "DOSES", itens: d });
+  window.__DOSES_FALLBACK__ = d;
 
-    <div class="glass card insights-card">
-      <h2 class="section-title" data-i18n="insights.title">Leituras do mês</h2>
-      <p class="section-sub" data-i18n="insights.sub">o que os números estão dizendo agora</p>
-      <div id="insights-list"></div>
-    </div>
+  /* combos logo abaixo das doses, em destaque */
+  ordenarCategorias();
+})();
 
-    <div class="glass heatmap-card">
-      <div class="heatmap-head">
-        <div>
-          <h2 class="section-title" data-i18n="heatmap.title">Seu ano em turnos</h2>
-          <p class="section-sub" data-i18n="heatmap.sub">cada quadrado é um dia</p>
-        </div>
-        <div class="year-nav">
-          <button type="button" class="secondary" id="heat-prev" data-i18n-title="heatmap.yearPrev" aria-label="Ano anterior">‹</button>
-          <span id="heat-year" class="year-label"></span>
-          <button type="button" class="secondary" id="heat-next" data-i18n-title="heatmap.yearNext" aria-label="Próximo ano">›</button>
-        </div>
-      </div>
-      <div class="heatmap-scroll">
-        <div class="heatmap-months" id="heatmap-months"></div>
-        <div class="heatmap-body">
-          <div class="heatmap-rowlabels" id="heatmap-rowlabels"></div>
-          <div class="heatmap-grid" id="heatmap-grid"></div>
-        </div>
-      </div>
-      <div class="heatmap-legend">
-        <span data-i18n="heatmap.less">Menos</span>
-        <span class="hcell" data-level="0"></span>
-        <span class="hcell" data-level="1"></span>
-        <span class="hcell" data-level="2"></span>
-        <span class="hcell" data-level="3"></span>
-        <span class="hcell" data-level="4"></span>
-        <span data-i18n="heatmap.more">Mais</span>
-      </div>
-    </div>
 
-    <div class="two-col">
-      <div class="glass card flush">
-        <h2 class="section-title" data-i18n="monthly.title">Resumo Mensal</h2>
-        <p class="section-sub" data-i18n="monthly.sub">% da meta de cada mês</p>
-        <div id="monthly-list"></div>
-      </div>
-      <div class="glass card flush">
-        <h2 class="section-title" data-i18n="weekday.title">Por Dia da Semana</h2>
-        <p class="section-sub" data-i18n="weekday.sub">onde seu ganho se concentra</p>
-        <div id="weekday-list"></div>
-      </div>
-    </div>
+/* Sabores com o mesmo preço viram um item só; o sabor aparece ao tocar. */
+var GRUPOS = [
+  { cat:"DRINKS PRONTOS", nome:"BEATS (LATA)",
+    membros:["BEATS GT(LATA)","BEATS SENSE (LATA)","BEATS TROPICAL (LATA)","BEATS RED MIX (LATA)","BEATS GREEN (LATA)"],
+    sabores:["GT","Sense","Tropical","Red Mix","Green"] },
+  { cat:"DRINKS PRONTOS", nome:"BEATS (LONG NECK)",
+    membros:["BEATS GT (LONG)","BEATS SENSE (LONG)","BEATS TROPICAL (LONG)","BEATS GREEN (LONG)","BEATS RED MIX (LONG)"],
+    sabores:["GT","Sense","Tropical","Green","Red Mix"] },
+  { cat:"CERVEJA 350", nome:"BADEN BADEN 350",
+    membros:["BADEN BADEN PEACH 350","BADEN BADEN IPA 350","BADEN BADEN CRISTAL 350"],
+    sabores:["Peach","IPA","Cristal"] },
+  { cat:"VODKAS", nome:"ASKOV 1L",
+    membros:["ASKOV TRADICIONAL 1L","ASKOV SABORES"],
+    sabores:["Tradicional","Sabores"] },
+  { cat:"COMBO VODKAS", nome:"COMBO ASKOV",
+    membros:["COMBO ASKOV TRADICIONAL","COMBO ASKOV SABORES"],
+    sabores:["Tradicional","Sabores"] },
+  { cat:"COMBO VODKAS", nome:"COMBO ASKOV REDBULL",
+    membros:["COMBO ASKOV TRADICIONAL REDBULL","COMBO ASKOV SABORES REDBULL"],
+    sabores:["Tradicional","Sabores"] },
+  { cat:"TABACARIA", nome:"ESSENCIAS",
+    membros:["ESSENCIA NAY","ESSENCIA ONIX","ESSENCIA ZIGGY"],
+    sabores:["Nay","Onix","Ziggy"] }
+];
 
-    <div class="glass chart-card">
-      <h2 class="section-title" data-i18n="chart.byMonth">Ganho por Mês</h2>
-      <p class="section-sub">&nbsp;</p>
-      <div class="chart" id="chart"></div>
-    </div>
+/* Ordena CAT deixando Doses e Combos no topo. Usado no boot e a cada sincronizacao. */
+/* Filtra TODOS pelo texto digitado e pela categoria aberta. Usado nas duas telas (celular e PC). */
+function filtrarProdutos(){
+  var termos = limpar(busca).split(/\s+/).filter(Boolean);
+  return TODOS.filter(function(it){
+    if (catAberta && it.cat !== catAberta) return false;
+    if (!termos.length) return true;
+    var alvo = limpar(it.nome + " " + it.cat + " " + (it.busca || "") + " " + (it.sabores ? it.sabores.join(" ") : ""));
+    return termos.every(function(t){ return alvo.indexOf(t) >= 0; });
+  });
+}
 
-    <div class="glass chart-card">
-      <h2 class="section-title" data-i18n="chart.evolution">Evolução no Mês Atual</h2>
-      <p class="section-sub" data-i18n="chart.evolutionSub">ganho acumulado, dia a dia</p>
-      <div class="line-chart-wrap" id="line-chart"></div>
-    </div>
+function ordenarCategorias(){
+  var ordemTopo = ["DOSES", "COMBO WHISKY", "COMBO GIN", "COMBO VODKAS"];
+  CAT.sort(function(a, b){
+    var ia = ordemTopo.indexOf(a.nome), ib = ordemTopo.indexOf(b.nome);
+    if (ia < 0 && ib < 0) return 0;
+    if (ia < 0) return 1;
+    if (ib < 0) return -1;
+    return ia - ib;
+  });
+}
 
-    <div class="two-col">
-      <div class="glass card flush">
-        <h2 class="section-title" data-i18n="chart.pie">Completo vs Meio</h2>
-        <p class="section-sub" data-i18n="chart.pieSub">distribuição dos seus turnos</p>
-        <div class="pie-wrap" id="pie-chart"></div>
-      </div>
-      <div class="glass card flush">
-        <h2 class="section-title" data-i18n="chart.last12">Últimos 12 Meses</h2>
-        <p class="section-sub" data-i18n="chart.last12Sub">janela móvel, até o mês atual</p>
-        <div class="chart" id="chart-12m" style="height:120px;"></div>
-      </div>
-    </div>
+function agrupar(){
+  GRUPOS.forEach(function(g){
+    var c = CAT.filter(function(x){ return x.nome === g.cat; })[0];
+    if (!c) return;
+    var achados = [], pos = -1;
+    g.membros.forEach(function(m){
+      for (var i = 0; i < c.itens.length; i++){
+        if (c.itens[i].nome === m){ if (pos < 0) pos = i; achados.push(c.itens[i]); return; }
+      }
+    });
+    if (achados.length < 2) return;
+    var base0 = achados[0];
+    var novo = { cat: g.cat, nome: g.nome, vars: base0.vars,
+      extras: base0.extras, doses: false,
+      combo: base0.combo, descRB: base0.descRB, descEN: base0.descEN,
+      sabores: g.sabores.slice(0, achados.length),
+      busca: g.membros.join(" ") + " " + (base0.busca || "") };
+    c.itens = c.itens.filter(function(x){ return achados.indexOf(x) < 0; });
+    c.itens.splice(pos, 0, novo);
+    TODOS = TODOS.filter(function(x){ return achados.indexOf(x) < 0; });
+    TODOS.push(novo);
+  });
+  /* mantém a ordem original da lista geral */
+  var ordem = {};
+  CAT.forEach(function(c, i){ c.itens.forEach(function(it, j){ ordem[it.cat + "|" + it.nome] = i * 1000 + j; }); });
+  TODOS.sort(function(a, b){ return ordem[a.cat + "|" + a.nome] - ordem[b.cat + "|" + b.nome]; });
+}
+agrupar();
 
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="statsx.title">Estatísticas</h2>
-      <p class="section-sub" data-i18n="statsx.sub">curiosidades sobre seu histórico completo</p>
-      <div class="stats-mini-grid" id="stats-mini-grid"></div>
-    </div>
-  </section>
+/* ============ cardápio ao vivo (produtos comuns e combos, vindos do OlaClick via Supabase) ============ */
+var cardapioCacheKey = "adega_cardapio_cache_v1";
+var cardapioFonte = "embutido";  /* embutido | cache | nuvem */
+var cardapioQuando = null;
+var cardapioSincronizando = false;
+var COMBO_CATS = ["COMBO WHISKY", "COMBO GIN", "COMBO VODKAS"];
 
-  <!-- ===================== CALENDÁRIO ===================== -->
-  <section id="panel-calendario" class="panel" tabindex="-1">
-    <div class="glass card">
-      <div class="cal-nav">
-        <div class="cal-nav-btns">
-          <button type="button" class="secondary" id="cal-prev" data-i18n-title="cal.prev" aria-label="Mês anterior">‹</button>
-        </div>
-        <div class="cal-title" id="cal-title"></div>
-        <div class="cal-nav-btns">
-          <button type="button" class="secondary" id="cal-next" data-i18n-title="cal.next" aria-label="Próximo mês">›</button>
-          <button type="button" class="secondary" id="cal-today" data-i18n="cal.today">Hoje</button>
-        </div>
-      </div>
-      <div class="cal-weekdays" id="cal-weekdays"></div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <p class="cal-total" id="cal-total"></p>
-    </div>
-  </section>
+function limparNomeCombo(s){
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
+    .replace(/\bRED\s*BULL\b|\bREDBULL\b/g, "")
+    .replace(/\b12A\b/g, "12 ANOS")
+    .replace(/\bGENT\b/g, "GENTLEMAN")
+    .replace(/\bWHISKY\b|\bVODKA\b/g, "")
+    .replace(/[^A-Z0-9]/g, " ").replace(/\s+/g, " ").trim();
+}
+function ehRedBullNome(n){ return /RED\s*BULL|REDBULL/i.test(n); }
+function resumoDescricao(d){
+  if (!d) return null;
+  var linhas = d.split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
+  return linhas.map(function(x){ return x.replace(/^COMBO COM\s*/i, "").replace(/COPOS 7$/, "COPOS 770"); }).join(" | ");
+}
 
-  <!-- ===================== LANÇAMENTOS ===================== -->
-  <section id="panel-lancamentos" class="panel" tabindex="-1">
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="entries.new">Novo Lançamento</h2>
-      <p class="section-sub" data-i18n="entries.newSub">preencha data e turno</p>
-      <div class="form-row">
-        <div class="field">
-          <label for="in-data" data-i18n="entries.date">Data</label>
-          <input type="date" id="in-data">
-        </div>
-        <div class="field">
-          <label for="in-turno" data-i18n="entries.turno">Turno</label>
-          <select id="in-turno" class="turno-select"></select>
-        </div>
-        <div class="field">
-          <label for="in-custom" data-i18n="entries.custom">Valor personalizado</label>
-          <input type="number" id="in-custom" data-i18n-placeholder="entries.customPlaceholder" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="in-note" data-i18n="entries.note">Observação</label>
-          <input type="text" id="in-note" maxlength="280" data-i18n-placeholder="entries.notePlaceholder">
-        </div>
-        <div class="field">
-          <label for="in-repeat" data-i18n="entries.repeat">Repetir por</label>
-          <select id="in-repeat">
-            <option value="1" data-i18n="entries.repeatNone">não repetir</option>
-            <option value="2">2</option>
-            <option value="4">4</option>
-            <option value="8">8</option>
-            <option value="12">12</option>
-          </select>
-        </div>
-        <button type="button" id="btn-add" data-i18n="entries.add">Adicionar</button>
-      </div>
-    </div>
+function dividirComboPorRotulo(base){
+  /* Um combo pode ter vários rótulos dentro dele (ex: Johnnie Walker tem 6 whiskies).
+     Em vez de esconder todos atrás de um clique só, cada rótulo vira um item próprio,
+     visível direto na lista — mesma lógica usada tanto na lista fixa quanto nos dados
+     ao vivo do Supabase, para as duas fontes ficarem sempre iguais. */
+  var saboresDistintos = [];
+  base.vars.forEach(function(v){
+    if (v.sabor && saboresDistintos.indexOf(v.sabor) < 0) saboresDistintos.push(v.sabor);
+  });
+  if (!saboresDistintos.length) return [base];
 
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="filters.title">Filtros &amp; Busca</h2>
-      <p class="section-sub" data-i18n="filters.sub">refine a lista abaixo</p>
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="search" id="search-input" data-i18n-placeholder="filters.search" placeholder="Buscar...">
-      </div>
-      <div class="filter-bar">
-        <div class="field">
-          <label for="f-mes" data-i18n="filters.month">Mês</label>
-          <select id="f-mes"></select>
-        </div>
-        <div class="field">
-          <label for="f-ano" data-i18n="filters.year">Ano</label>
-          <input type="number" id="f-ano" step="1" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label for="f-inicio" data-i18n="filters.from">De</label>
-          <input type="date" id="f-inicio">
-        </div>
-        <div class="field">
-          <label for="f-fim" data-i18n="filters.to">Até</label>
-          <input type="date" id="f-fim">
-        </div>
-        <div class="field">
-          <label for="f-turno" data-i18n="entries.turno">Turno</label>
-          <select id="f-turno" class="turno-select" data-all="1"></select>
-        </div>
-        <div class="field check-field">
-          <input type="checkbox" id="f-personalizados">
-          <label for="f-personalizados" class="check-label" data-i18n="filters.onlyCustom">só personalizados</label>
-        </div>
-        <button type="button" class="secondary" id="btn-clear-filters" data-i18n="filters.clear">Limpar filtros</button>
-      </div>
-      <p class="filter-result" id="filter-result" role="status"></p>
-    </div>
+  var semSabor = base.vars.filter(function(v){ return !v.sabor; });
+  var divididos = [];
+  saboresDistintos.forEach(function(sabor){
+    var novosVars = [];
+    ["RB", "EN"].forEach(function(g){
+      var comEsseSabor = base.vars.filter(function(v){ return v.grupo === g && v.sabor === sabor; })[0];
+      if (comEsseSabor) { novosVars.push({ grupo: g, preco: comEsseSabor.preco }); return; }
+      var bare = semSabor.filter(function(v){ return v.grupo === g; })[0];
+      if (bare) novosVars.push({ grupo: g, preco: bare.preco });
+    });
+    if (!novosVars.length) return;
+    divididos.push({
+      cat: base.cat, nome: base.nome + " \u2014 " + sabor.toUpperCase(), combo: true,
+      vars: novosVars, descRB: base.descRB, descEN: base.descEN, busca: base.busca,
+      extras: false, doses: false
+    });
+  });
+  return divididos;
+}
 
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="list.title">Todos os Lançamentos</h2>
-      <p class="section-sub" data-i18n="list.sub">mais recente primeiro</p>
-      <div class="entry-scroll">
-        <div class="entry-list" id="entries-list"></div>
-      </div>
-      <div id="entries-empty" class="empty-state" style="display:none;"></div>
-    </div>
-  </section>
+function pareiaCombos(itensCombo){
+  var semRB = itensCombo.filter(function(p){ return !ehRedBullNome(p.nome); });
+  var comRB = itensCombo.filter(function(p){ return ehRedBullNome(p.nome); });
+  var usados = [];
+  var resultado = [];
 
-  <!-- ===================== PARÂMETROS ===================== -->
-  <section id="panel-parametros" class="panel" tabindex="-1">
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="params.title">Parâmetros de Cálculo</h2>
-      <p class="section-sub" data-i18n="params.sub">mude os valores e tudo se ajusta sozinho</p>
-      <div class="form-row" style="margin-bottom:14px;">
-        <div class="field">
-          <label for="p-meio"><span data-i18n="params.meio">Turno Meio</span> <span class="currency-suffix"></span></label>
-          <input type="number" id="p-meio" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="p-semana"><span data-i18n="params.semana">Completo — dia comum</span> <span class="currency-suffix"></span></label>
-          <input type="number" id="p-semana" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="p-fds"><span data-i18n="params.fds">Completo — dia premium</span> <span class="currency-suffix"></span></label>
-          <input type="number" id="p-fds" step="0.01" min="0" inputmode="decimal">
-        </div>
-      </div>
-      <div class="field">
-        <label data-i18n="params.fdsDays">Dias com tarifa premium</label>
-        <div class="day-toggles" id="p-fds-days"></div>
-      </div>
-      <div class="form-row" style="margin-top:16px;">
-        <button type="button" id="btn-save-params" data-i18n="params.save">Salvar</button>
-        <span class="save-msg" id="save-msg" data-i18n="params.saved" role="status">Salvo ✓</span>
-      </div>
-      <p class="params-note" data-i18n-html="params.note"></p>
-    </div>
-  </section>
+  semRB.forEach(function(a){
+    var ka = limparNomeCombo(a.nome);
+    var idx = -1;
+    for (var i = 0; i < comRB.length; i++){
+      if (usados.indexOf(i) >= 0) continue;
+      if (limparNomeCombo(comRB[i].nome) === ka){ idx = i; break; }
+    }
+    if (idx < 0){
+      for (var j = 0; j < comRB.length; j++){
+        if (usados.indexOf(j) >= 0) continue;
+        var kb = limparNomeCombo(comRB[j].nome);
+        if (kb.indexOf(ka) === 0 || ka.indexOf(kb) === 0){ idx = j; break; }
+      }
+    }
+    var b = idx >= 0 ? comRB[idx] : null;
+    if (idx >= 0) usados.push(idx);
+    var varsRB = b ? b.vars.map(function(v){ return { grupo: "RB", sabor: v.rot || null, preco: v.preco }; }) : [];
+    var varsEN = a.vars.map(function(v){ return { grupo: "EN", sabor: v.rot || null, preco: v.preco }; });
+    var itemMesclado = {
+      cat: a.cat, nome: a.nome, combo: true, vars: varsRB.concat(varsEN),
+      descRB: resumoDescricao(b ? b.descricao : null),
+      descEN: resumoDescricao(a.descricao),
+      busca: b ? b.nome : "", extras: false, doses: false
+    };
+    dividirComboPorRotulo(itemMesclado).forEach(function(x){ resultado.push(x); });
+  });
+  comRB.forEach(function(b, idx){
+    if (usados.indexOf(idx) >= 0) return;
+    var varsRB = b.vars.map(function(v){ return { grupo: "RB", sabor: v.rot || null, preco: v.preco }; });
+    var itemSo = {
+      cat: b.cat, nome: b.nome, combo: true, vars: varsRB,
+      descRB: resumoDescricao(b.descricao), descEN: null, busca: "", extras: false, doses: false
+    };
+    dividirComboPorRotulo(itemSo).forEach(function(x){ resultado.push(x); });
+  });
+  return resultado;
+}
 
-  <!-- ===================== OBJETIVOS ===================== -->
-  <section id="panel-objetivos" class="panel" tabindex="-1">
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="goals.title">Objetivos</h2>
-      <p class="section-sub" data-i18n="goals.sub">defina suas metas e acompanhe o progresso</p>
-      <div class="form-row">
-        <div class="field">
-          <label for="obj-mensal"><span data-i18n="goals.monthly">Meta mensal</span> <span class="currency-suffix"></span></label>
-          <input type="number" id="obj-mensal" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="obj-anual"><span data-i18n="goals.annual">Meta anual</span> <span class="currency-suffix"></span></label>
-          <input type="number" id="obj-anual" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="obj-turnos" data-i18n="goals.shifts">Meta de turnos/mês</label>
-          <input type="number" id="obj-turnos" step="1" min="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label for="obj-dias" data-i18n="goals.days">Meta de dias trabalhados/mês</label>
-          <input type="number" id="obj-dias" step="1" min="0" inputmode="numeric">
-        </div>
-        <button type="button" id="btn-save-objetivos" data-i18n="goals.save">Salvar Objetivos</button>
-        <span class="save-msg" id="obj-save-msg" data-i18n="params.saved" role="status">Salvo ✓</span>
-      </div>
-    </div>
-    <div class="period-grid" id="objetivos-grid"></div>
-  </section>
+function construirCatalogoDoCardapio(itensBrutos){
+  var porCat = {};
+  itensBrutos.forEach(function(p){ (porCat[p.cat] = porCat[p.cat] || []).push(p); });
+  var novoCAT = [];
+  for (var nomeCat in porCat){
+    var itensCat;
+    if (COMBO_CATS.indexOf(nomeCat) >= 0){
+      itensCat = pareiaCombos(porCat[nomeCat]);
+    } else {
+      itensCat = porCat[nomeCat].map(function(p){
+        return { cat: p.cat, nome: p.nome, vars: p.vars, extras: p.extras, doses: false };
+      });
+    }
+    novoCAT.push({ nome: nomeCat, itens: itensCat });
+  }
+  return novoCAT;
+}
 
-  <!-- ===================== CONFIGURAÇÕES ===================== -->
-  <section id="panel-config" class="panel" tabindex="-1">
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="backup.title">Backup &amp; Exportação</h2>
-      <p class="section-sub" data-i18n="backup.sub">baixe uma cópia dos seus dados de vez em quando</p>
-      <div class="form-row">
-        <button type="button" id="btn-export" data-i18n="backup.json">Exportar backup (.json)</button>
-        <button type="button" class="secondary" id="btn-import" data-i18n="backup.import">Importar backup</button>
-        <input type="file" id="input-import" accept="application/json,.json" style="display:none;">
-      </div>
-      <div class="form-row" style="margin-top:10px;">
-        <button type="button" class="secondary" id="btn-export-excel" data-i18n="backup.xlsx">Exportar Excel (.xlsx)</button>
-        <button type="button" class="secondary" id="btn-export-csv" data-i18n="backup.csv">Exportar CSV</button>
-        <button type="button" class="secondary" id="btn-export-pdf" data-i18n="backup.pdf">Exportar PDF</button>
-      </div>
-      <p class="params-note" id="backup-msg" role="status"></p>
-    </div>
+function aplicarCardapio(novoCAT){
+  /* mantém as doses e os itens manuais intactos; troca só o restante do cardápio */
+  TODOS = TODOS.filter(function(it){ return it.doses || it.manual; });
+  CAT.forEach(function(c){ c.itens = c.itens.filter(function(it){ return it.doses || it.manual; }); });
 
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="config.title">Configurações</h2>
-      <p class="section-sub" data-i18n="config.sub">preferências gerais do app</p>
-      <div class="form-row" style="margin-bottom:14px;">
-        <div class="field">
-          <label for="cfg-moeda" data-i18n="config.currency">Moeda</label>
-          <select id="cfg-moeda"></select>
-        </div>
-        <div class="field">
-          <label for="cfg-idioma" data-i18n="config.language">Idioma</label>
-          <select id="cfg-idioma"></select>
-        </div>
-        <div class="field">
-          <label for="cfg-tema" data-i18n="config.theme">Tema</label>
-          <select id="cfg-tema">
-            <option value="escuro" data-i18n="config.themeDark">Escuro</option>
-            <option value="claro" data-i18n="config.themeLight">Claro</option>
-            <option value="sistema" data-i18n="config.themeSystem">Seguir sistema</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="field check-field">
-          <input type="checkbox" id="cfg-hide-default">
-          <label for="cfg-hide-default" class="check-label" data-i18n="config.hideDefault">ocultar valores por padrão ao abrir</label>
-        </div>
-      </div>
-      <div class="form-row" style="margin-top:6px;">
-        <div class="field check-field">
-          <input type="checkbox" id="cfg-export-auto">
-          <label for="cfg-export-auto" class="check-label" data-i18n="config.autoExport">baixar backup automático</label>
-        </div>
-      </div>
-      <div class="form-row" style="margin-top:16px;">
-        <button type="button" id="btn-save-config" data-i18n="config.save">Salvar Configurações</button>
-        <span class="save-msg" id="config-save-msg" data-i18n="params.saved" role="status">Salvo ✓</span>
-      </div>
-    </div>
+  novoCAT.forEach(function(grupo){
+    var alvo = CAT.filter(function(c){ return c.nome === grupo.nome; })[0];
+    if (!alvo){ alvo = { nome: grupo.nome, itens: [] }; CAT.push(alvo); }
+    var manuaisExistentes = alvo.itens;
+    alvo.itens = grupo.itens.concat(manuaisExistentes);
+    grupo.itens.forEach(function(it){ TODOS.push(it); });
+  });
 
-    <div class="glass card">
-      <h2 class="section-title" data-i18n="config.about">Sobre</h2>
-      <p class="section-sub" id="about-version"></p>
-      <p class="params-note" id="about-storage"></p>
-    </div>
+  agrupar();
 
-    <div class="glass card danger-card">
-      <h2 class="section-title" data-i18n="config.danger">Zona de risco</h2>
-      <p class="section-sub" data-i18n="config.dangerSub">ações que não dá para desfazer</p>
-      <button type="button" class="danger" id="btn-wipe" data-i18n="config.wipe">Apagar todos os lançamentos</button>
-    </div>
-  </section>
+  ordenarCategorias();
+}
 
-</div>
+function salvarCacheCardapio(dados){
+  try { localStorage.setItem(cardapioCacheKey, JSON.stringify({ dados: dados, quando: Date.now() })); }
+  catch (e){ /* sem localStorage — sem problema */ }
+}
+function carregarCacheCardapio(){
+  try {
+    var bruto = localStorage.getItem(cardapioCacheKey);
+    if (!bruto) return null;
+    var obj = JSON.parse(bruto);
+    if (!obj || !Array.isArray(obj.dados)) return null;
+    return obj;
+  } catch (e){ return null; }
+}
 
-<!-- FAB e barra inferior (mobile) -->
-<button type="button" id="fab-add" data-i18n-aria="entries.new" aria-label="Novo lançamento">+</button>
-<nav id="bottom-nav" aria-label="Navegação principal">
-  <button type="button" class="bn-tab active" data-tab="resumo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-    <span data-i18n="nav.resumo">Resumo</span>
-  </button>
-  <button type="button" class="bn-tab" data-tab="calendario">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    <span data-i18n="nav.calendario">Calendário</span>
-  </button>
-  <button type="button" class="bn-tab" data-tab="lancamentos">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-    <span data-i18n="nav.lista">Lista</span>
-  </button>
-  <button type="button" class="bn-tab" data-tab="objetivos">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
-    <span data-i18n="nav.metas">Metas</span>
-  </button>
-  <button type="button" class="bn-tab" data-tab="config">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
-    <span data-i18n="nav.config">Config</span>
-  </button>
-</nav>
+function sincronizarCardapio(manual){
+  if (cardapioSincronizando) return Promise.resolve();
+  cardapioSincronizando = true;
+  if (manual){ elAtualizar.disabled = true; elAtualizar.textContent = "Buscando…"; }
+  marcarHora();
 
-</div>
+  var url = SUPABASE_URL + "/rest/v1/cardapio_sync?select=dados,atualizado_em&id=eq.1";
+  return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo() } })
+    .then(function(r){ if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+    .then(function(linhas){
+      if (!Array.isArray(linhas) || !linhas.length || !Array.isArray(linhas[0].dados) || !linhas[0].dados.length){
+        throw new Error("resposta vazia");
+      }
+      var dados = linhas[0].dados;
+      aplicarCardapio(construirCatalogoDoCardapio(dados));
+      salvarCacheCardapio(dados);
+      cardapioFonte = "nuvem";
+      cardapioQuando = new Date(linhas[0].atualizado_em);
+    })
+    .catch(function(){
+      if (cardapioFonte !== "nuvem"){
+        var cache = carregarCacheCardapio();
+        if (cache){
+          aplicarCardapio(construirCatalogoDoCardapio(cache.dados));
+          cardapioFonte = "cache";
+          cardapioQuando = new Date(cache.quando);
+        }
+      }
+    })
+    .finally(function(){
+      cardapioSincronizando = false;
+      if (manual){ elAtualizar.disabled = false; elAtualizar.textContent = "Atualizar"; }
+      marcarHora();
+      render();
+    });
+}
 
-<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+/* ============ util ============ */
+function limpar(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(); }
+function brl(n){ return "R$ " + n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function qtdDe(r){ var m = String(r).match(/(\d+)\s*(UN|UNID)?/i); var n = m ? Number(m[1]) : 0; return n > 1 ? n : null; }
+function bonito(r){
+  if (!r) return "Preço";
+  var t = String(r).trim();
+  if (/^UNIDADE$/i.test(t)) return "Uma unidade";
+  t = t.replace(/^EMBALAGEM COM\s*/i, "Embalagem com ");
+  t = t.replace(/^CAIXA C\/\s*/i, "Caixa com ").replace(/^CAIXA COM\s*/i, "Caixa com ");
+  t = t.replace(/^PACOTE COM\s*/i, "Pacote com ").replace(/^PCT\s*/i, "Pacote ");
+  t = t.replace(/\b([A-ZÀ-Ú]{2,})\b/g, function(p){
+    if (/^(ML|L|KG|G|UN|IPA)$/i.test(p)) return p.toUpperCase();
+    return p.charAt(0) + p.slice(1).toLowerCase();
+  });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+var PADRAO = {
+  RB: "5 REDBULL 250 + 5 GELOS + 3 COPOS 770",
+  EN: "1 ENERGETICO 2L + 5 GELOS + 3 COPOS 770 | 1 AGUA DE COCO 1L + 5 GELOS + 3 COPOS 770 | 1 SUCO DEL VALLE 1L + 5 GELOS + 3 COPOS 770"
+};
 
-<!-- ===================== RELATÓRIO PARA IMPRESSÃO / PDF ===================== -->
-<div id="print-report"></div>
+function vemTexto(d){
+  var partes = d.split("|").map(function(x){ return arrumaVem(x.trim()); });
+  if (partes.length === 1) return "Vem: " + partes[0];
+  /* separa o que muda do que é comum */
+  var comum = partes[0].split(" + ").slice(1).join(" + ");
+  var iguais = partes.every(function(p){ return p.split(" + ").slice(1).join(" + ") === comum; });
+  if (iguais){
+    var opcoes = partes.map(function(p){ return p.split(" + ")[0]; });
+    return "Vem: " + opcoes.join(", ou ") + " + " + comum;
+  }
+  return "Vem: " + partes.join(" · ou · ");
+}
 
-<!-- ===================== MODAL: DIA DO CALENDÁRIO ===================== -->
-<div class="modal-backdrop" id="day-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="glass modal-box">
-    <button type="button" class="modal-close" id="modal-close" aria-label="Fechar">&times;</button>
-    <h3 id="modal-title" data-i18n="cal.dayTitle">Lançamentos do dia</h3>
-    <div id="modal-entries"></div>
-    <div class="modal-add-form">
-      <div class="form-row">
-        <div class="field">
-          <label for="modal-turno" data-i18n="entries.turno">Turno</label>
-          <select id="modal-turno" class="turno-select"></select>
-        </div>
-        <div class="field">
-          <label for="modal-custom" data-i18n="entries.custom">Valor personalizado</label>
-          <input type="number" id="modal-custom" data-i18n-placeholder="entries.customPlaceholder" step="0.01" min="0" inputmode="decimal">
-        </div>
-        <div class="field">
-          <label for="modal-note" data-i18n="entries.note">Observação</label>
-          <input type="text" id="modal-note" maxlength="280" data-i18n-placeholder="entries.notePlaceholder">
-        </div>
-        <button type="button" id="modal-add-btn" data-i18n="entries.add">Adicionar</button>
-      </div>
-    </div>
-  </div>
-</div>
+function arrumaVem(t){
+  t = t.replace(/COPOS 7\b/, "COPOS 770")
+       .replace(/REDBULL/gi, "Red Bull")
+       .replace(/ENERGETICO/gi, "Vibe/Baly")
+       .replace(/AGUA DE COCO/gi, "água de coco")
+       .replace(/SUCO DEL VALLE/gi, "suco Del Valle")
+       .replace(/GELOS/gi, "gelos")
+       .replace(/COPOS/gi, "copos")
+       .replace(/\b(\d+)L\b/gi, "$1L")
+       .replace(/\b(\d+)ML\b/gi, "$1ml");
+  return t;
+}
 
-<!-- ===================== ATALHOS DE TECLADO ===================== -->
-<div class="modal-backdrop" id="shortcut-help" role="dialog" aria-modal="true" aria-labelledby="sc-title">
-  <div class="glass modal-box">
-    <button type="button" class="modal-close" id="sc-close" aria-label="Fechar">&times;</button>
-    <h3 id="sc-title" data-i18n="sc.title">Atalhos de teclado</h3>
-    <div class="sc-list"></div>
-  </div>
-</div>
+function precoBase(it){ return it.vars[0]; }
+function rotuloLinha(it){
+  if (it.combo) return "com red bull";
+  if (it.doses) return "com red bull";
+  if (it.vars.length > 1) return bonito(it.vars[0].rot).toLowerCase();
+  return null;
+}
+function temMais(it){ return it.vars.length > 1 || it.extras || !!it.sabores || !!it.combo; }
 
+/* ============ estado ============ */
+var busca = "", catAberta = null, itemAberto = null, ultima = new Date();
+
+var elTela = document.getElementById("tela");
+var elBusca = document.getElementById("busca");
+var elLimpar = document.getElementById("limpar");
+var elQuando = document.getElementById("quando");
+var elAtualizar = document.getElementById("atualizar");
+
+function horas(d){
+  return d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+function marcarHora(){
+  elQuando.innerHTML = statusDosesHTML();
+}
+
+/* ============ sincronização das doses com o Supabase ============ */
+var SUPABASE_URL = "https://eytfsukgsjnslmzdqyug.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5dGZzdWtnc2puc2xtemRxeXVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMjI2NzIsImV4cCI6MjEwMzY5ODY3Mn0.hIg8lVpDH6yKWoXdBEOKpt7U0INEW72-D0apfSOWrKk";
+var CACHE_KEY = "adega_doses_cache_v1";
+
+/* ============ login (equipe = uma vez por aparelho; admin = a cada entrada) ============ */
+var AUTH_URL = SUPABASE_URL + "/auth/v1";
+var SESSAO_EQUIPE_KEY = "adega_sessao_equipe_v1";
+var EMAIL_ADMIN = "admin@adeganoruega.com";
+var EMAIL_EQUIPE = "geral@adeganoruega.com";
+
+var sessaoEquipe = null;   /* { access_token, refresh_token } — persiste no aparelho */
+var sessaoAdmin = null;    /* { access_token, refresh_token } — só na memória, some ao sair do admin */
+
+function tokenAtivo(){
+  if (sessaoAdmin) return sessaoAdmin.access_token;
+  if (sessaoEquipe) return sessaoEquipe.access_token;
+  return SUPABASE_KEY;
+}
+
+function loginComSenha(email, senha){
+  return fetch(AUTH_URL + "/token?grant_type=password", {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email, password: senha })
+  }).then(function(r){
+    return r.json().then(function(d){
+      if (!r.ok) throw new Error(traduzErroLogin(d.error_description || d.msg));
+      return { access_token: d.access_token, refresh_token: d.refresh_token };
+    });
+  });
+}
+
+function traduzErroLogin(msg){
+  if (!msg) return "Não consegui entrar. Tenta de novo.";
+  if (/invalid login credentials/i.test(msg)) return "Senha incorreta.";
+  if (/too many requests/i.test(msg)) return "Muitas tentativas. Espera um minuto e tenta de novo.";
+  return msg;
+}
+
+function renovarSessaoEquipe(refresh_token){
+  return fetch(AUTH_URL + "/token?grant_type=refresh_token", {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refresh_token })
+  }).then(function(r){
+    return r.json().then(function(d){
+      if (!r.ok) throw new Error("sessão expirada");
+      return { access_token: d.access_token, refresh_token: d.refresh_token };
+    });
+  });
+}
+
+function salvarSessaoEquipe(s){
+  sessaoEquipe = s;
+  try { localStorage.setItem(SESSAO_EQUIPE_KEY, JSON.stringify(s)); } catch (e){}
+}
+function carregarSessaoEquipeSalva(){
+  try {
+    var bruto = localStorage.getItem(SESSAO_EQUIPE_KEY);
+    return bruto ? JSON.parse(bruto) : null;
+  } catch (e){ return null; }
+}
+function limparSessaoEquipe(){
+  sessaoEquipe = null;
+  try { localStorage.removeItem(SESSAO_EQUIPE_KEY); } catch (e){}
+}
+
+setInterval(function(){
+  if (sessaoEquipe) renovarSessaoEquipe(sessaoEquipe.refresh_token).then(salvarSessaoEquipe).catch(function(){});
+}, 45 * 60 * 1000);
+
+
+var doseFonte = "embutido";      /* embutido | cache | nuvem */
+var doseQuando = null;           /* Date da última sincronização boa */
+var doseSincronizando = false;
+
+function statusDosesHTML(){
+  if (doseSincronizando || manualSincronizando || cardapioSincronizando) return "<span class=\"status-doses\">Atualizando…</span>";
+  var ranking = { embutido: 0, cache: 1, nuvem: 2 };
+  var fontes = [
+    { f: doseFonte, q: doseQuando },
+    { f: manualFonte, q: manualQuando },
+    { f: cardapioFonte, q: cardapioQuando }
+  ];
+  var pior = fontes[0];
+  fontes.forEach(function(x){ if (ranking[x.f] < ranking[pior.f]) pior = x; });
+  if (pior.f === "nuvem") return "<span class=\"status-doses ok\">Atualizado às " + horas(pior.q) + "</span>";
+  if (pior.f === "cache") return "<span class=\"status-doses\">Dados de " + horas(pior.q) + " (offline)</span>";
+  return "<span class=\"status-doses aviso\">Ainda não sincronizado</span>";
+}
+
+function aplicarDoses(linhas){
+  var novos = linhas.map(function(r){
+    return { cat: "DOSES", nome: String(r.nome).toUpperCase(), doses: true, extras: false, id: r.id,
+      vars: [
+        { rot: "Com Red Bull", preco: Number(r.preco_red_bull) },
+        { rot: "Com Vibe/Baly", preco: Number(r.preco_vibe_baly) },
+        { rot: "Pura", preco: Number(r.preco_pura) }
+      ] };
+  });
+  TODOS = TODOS.filter(function(it){ return !it.doses; });
+  novos.forEach(function(it){ TODOS.push(it); });
+  var catDoses = CAT.filter(function(c){ return c.nome === "DOSES"; })[0];
+  if (catDoses) catDoses.itens = novos;
+  else CAT.unshift({ nome: "DOSES", itens: novos });
+}
+
+/* ============ itens manuais (qualquer categoria, adicionados pela dona) ============ */
+var manualSincronizado = {};   /* { catNome: [ {id, cat, nome, vars, manual:true} ] } — última cópia confirmada do banco */
+var manualCacheKey = "adega_manual_cache_v1";
+var manualFonte = "embutido";  /* embutido | cache | nuvem */
+var manualQuando = null;
+var manualSincronizando = false;
+
+function aplicarManuais(linhas){
+  /* linhas: [{id, categoria, nome, preco, variante_nome, variante_preco}] */
+  var porCat = {};
+  linhas.forEach(function(r){
+    var vars = [{ rot: r.variante_nome ? "Unidade" : "", preco: Number(r.preco) }];
+    if (r.variante_nome) vars.push({ rot: r.variante_nome, preco: Number(r.variante_preco) });
+    var it = { cat: r.categoria, nome: String(r.nome).toUpperCase(), vars: vars,
+      extras: false, doses: false, manual: true, id: r.id };
+    (porCat[r.categoria] = porCat[r.categoria] || []).push(it);
+  });
+
+  /* remove os itens manuais antigos de TODOS e de cada categoria, e insere os novos */
+  TODOS = TODOS.filter(function(it){ return !it.manual; });
+  CAT.forEach(function(c){ c.itens = c.itens.filter(function(it){ return !it.manual; }); });
+  for (var catNome in porCat){
+    var alvo = CAT.filter(function(c){ return c.nome === catNome; })[0];
+    if (alvo) alvo.itens = alvo.itens.concat(porCat[catNome]);
+    porCat[catNome].forEach(function(it){ TODOS.push(it); });
+  }
+  manualSincronizado = porCat;
+}
+
+function manuaisAtuais(nome){
+  return manualSincronizado[nome] || [];
+}
+
+function salvarCacheManuais(linhas){
+  try { localStorage.setItem(manualCacheKey, JSON.stringify({ dados: linhas, quando: Date.now() })); }
+  catch (e){ /* sem localStorage — sem problema, só não guarda cópia */ }
+}
+function carregarCacheManuais(){
+  try {
+    var bruto = localStorage.getItem(manualCacheKey);
+    if (!bruto) return null;
+    var obj = JSON.parse(bruto);
+    if (!obj || !Array.isArray(obj.dados)) return null;
+    return obj;
+  } catch (e){ return null; }
+}
+
+function sincronizarManuais(manual){
+  if (manualSincronizando) return Promise.resolve();
+  manualSincronizando = true;
+  if (manual){ elAtualizar.disabled = true; elAtualizar.textContent = "Buscando…"; }
+  marcarHora();
+
+  var url = SUPABASE_URL + "/rest/v1/itens_manuais?select=id,categoria,nome,preco,variante_nome,variante_preco&order=nome.asc";
+  return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo() } })
+    .then(function(r){ if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+    .then(function(dados){
+      if (!Array.isArray(dados)) throw new Error("resposta inválida");
+      aplicarManuais(dados);
+      salvarCacheManuais(dados);
+      manualFonte = "nuvem";
+      manualQuando = new Date();
+    })
+    .catch(function(){
+      if (manualFonte !== "nuvem"){
+        var cache = carregarCacheManuais();
+        if (cache){
+          aplicarManuais(cache.dados);
+          manualFonte = "cache";
+          manualQuando = new Date(cache.quando);
+        }
+      }
+    })
+    .finally(function(){
+      manualSincronizando = false;
+      if (manual){ elAtualizar.disabled = false; elAtualizar.textContent = "Atualizar"; }
+      marcarHora();
+      render();
+    });
+}
+
+function salvarCacheDoses(linhas){
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ dados: linhas, quando: Date.now() }));
+  } catch (e){ /* localStorage indisponível — sem problema, apenas não guarda cópia */ }
+}
+
+function carregarCacheDoses(){
+  try {
+    var bruto = localStorage.getItem(CACHE_KEY);
+    if (!bruto) return null;
+    var obj = JSON.parse(bruto);
+    if (!obj || !Array.isArray(obj.dados) || !obj.dados.length) return null;
+    return obj;
+  } catch (e){ return null; }
+}
+
+function sincronizarDoses(manual){
+  if (doseSincronizando) return;
+  doseSincronizando = true;
+  if (manual){ elAtualizar.disabled = true; elAtualizar.textContent = "Buscando…"; }
+  marcarHora();
+
+  var url = SUPABASE_URL + "/rest/v1/doses?select=id,nome,preco_red_bull,preco_vibe_baly,preco_pura&order=nome.asc";
+  return fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo() } })
+    .then(function(r){ if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+    .then(function(dados){
+      if (!Array.isArray(dados) || !dados.length) throw new Error("resposta vazia");
+      aplicarDoses(dados);
+      salvarCacheDoses(dados);
+      doseFonte = "nuvem";
+      doseQuando = new Date();
+    })
+    .catch(function(){
+      /* sem internet ou banco fora do ar: usa cache local se existir e ainda não estivermos usando a nuvem */
+      if (doseFonte !== "nuvem"){
+        var cache = carregarCacheDoses();
+        if (cache){
+          aplicarDoses(cache.dados);
+          doseFonte = "cache";
+          doseQuando = new Date(cache.quando);
+        }
+      }
+    })
+    .finally(function(){
+      doseSincronizando = false;
+      if (manual){ elAtualizar.disabled = false; elAtualizar.textContent = "Atualizar"; }
+      marcarHora();
+      render();
+    });
+}
+
+/* ============ telas ============ */
+function verQuadro(){
+  function tile(c){
+    var doses = c.nome === "DOSES";
+    var combo = c.nome.indexOf("COMBO ") === 0;
+    var rotulo = doses ? "Doses" : (combo ? "Combo " + c.nome.slice(6).toLowerCase() : c.nome);
+    var classe = "tile" + (doses ? " doses" : (combo ? " combo" : ""));
+    return '<button class="' + classe + '" data-cat="' + esc(c.nome) + '">' +
+      '<span class="nm">' + esc(rotulo).replace(/\//g, "/\u200B") + '</span>' +
+      '<span class="ct">' + c.itens.length + (doses ? " bebidas" : "") + '</span></button>';
+  }
+  var destaque = CAT.filter(function(c){ return c.nome === "DOSES" || c.nome.indexOf("COMBO ") === 0; });
+  var resto = CAT.filter(function(c){ return destaque.indexOf(c) < 0; });
+
+  var h = '<div class="quadro">';
+  if (destaque.length){
+    h += '<p class="titulo">Mais consultados</p><div class="grade destaques">';
+    destaque.forEach(function(c){ h += tile(c); });
+    h += '</div>';
+  }
+  h += '<p class="titulo separa">Todas as categorias</p><div class="grade">';
+  resto.forEach(function(c){ h += tile(c); });
+  h += '</div>';
+  h += '<button class="entrada" id="entrar-dona">Área admin</button>';
+  h += '</div>';
+  elTela.innerHTML = h;
+}
+
+function variosRotulos(it){
+  if (!it.combo) return false;
+  var sabores = {};
+  it.vars.forEach(function(v){ if (v.sabor) sabores[v.sabor] = true; });
+  return Object.keys(sabores).length > 1;
+}
+
+function blocoGruposCombo(it){
+  var h = "";
+  var temCoco = /COCO|SUCO/i.test(it.descEN || PADRAO.EN);
+  var titEN = temCoco ? "Com Vibe/Baly, água de coco ou suco" : "Com Vibe/Baly";
+  [["RB", "Com Red Bull", it.descRB || PADRAO.RB],
+   ["EN", titEN, it.descEN || PADRAO.EN]]
+  .forEach(function(g){
+    var lista = it.vars.filter(function(v){ return v.grupo === g[0]; });
+    if (!lista.length) return;
+    h += '<p class="grupo-t">' + esc(g[1]) + '</p>';
+    lista.forEach(function(v){
+      h += '<div class="op"><span class="lb"><span>' +
+           esc(v.sabor ? bonito(v.sabor) : "Preço do combo") + '</span></span>';
+      h += '<span class="vl">' + brl(v.preco) + '</span></div>';
+    });
+    if (g[2]) h += '<p class="vem">' + esc(vemTexto(g[2])) + '</p>';
+  });
+  return h;
+}
+
+/* combos com vários rótulos (Johnnie Walker, Grey Goose, Smirnoff, Jack Daniels, Jim Beam...)
+   aparecem sempre abertos, com todos os preços visíveis — sem precisar clicar */
+function linhaComboFixo(it){
+  var h = '<div class="combo-fixo"><div class="combo-fixo-nome">' + esc(it.nome) + '</div>';
+  h += '<div class="det">' + blocoGruposCombo(it) + '</div></div>';
+  return h;
+}
+
+function linhaItem(it, idx){
+  if (variosRotulos(it)) return linhaComboFixo(it);
+
+  var id = it.cat + "|" + it.nome + "|" + idx;
+  var ab = itemAberto === id;
+  var mais = temMais(it);
+  var base = precoBase(it);
+  var h = '<button class="item' + (ab ? " ab" : "") + '" data-item="' + esc(id) + '"' + (mais ? "" : " disabled") + '>';
+  h += '<span class="nm">' + esc(it.nome);
+  h += '</span><span class="pr"><span class="v">' + brl(base.preco) + '</span>';
+  var rot = rotuloLinha(it);
+  if (rot) h += '<span class="rot">' + esc(rot) + '</span>';
+  h += '</span><span class="seta">' + (mais ? "&rsaquo;" : "") + '</span></button>';
+
+  if (ab){
+    h += '<div class="det">';
+
+    if (it.combo){
+      h += blocoGruposCombo(it);
+      if (it.sabores) h += '<p class="sabores"><b>Sabores:</b> ' + esc(it.sabores.join(" · ")) + '<br>Todos pelo mesmo preço.</p>';
+    } else {
+      var soUm = it.vars.length === 1 && !it.vars[0].rot;
+      if (!soUm) it.vars.forEach(function(v){
+        var q = qtdDe(v.rot), un = (q && !it.doses) ? v.preco / q : null;
+        h += '<div class="op"><span class="lb"><span>' + esc(bonito(v.rot)) + '</span>';
+        if (un) h += '<em>Sai ' + brl(un) + ' cada</em>';
+        h += '</span><span class="vl">' + brl(v.preco) + '</span></div>';
+      });
+      if (it.sabores) h += '<p class="sabores"><b>Sabores:</b> ' + esc(it.sabores.join(" · ")) + '<br>Todos pelo mesmo preço.</p>';
+      if (it.extras) h += '<p class="aviso">No cardápio este produto tem opções a escolher (energético ou sabor), que podem mudar o valor. Confira antes de fechar a venda.</p>';
+    }
+    h += '</div>';
+  }
+  return h;
+}
+
+function verLista(){
+  var res = filtrarProdutos();
+
+  var h = "";
+  if (catAberta){
+    h += '<button class="voltar" id="voltar"><span class="ch">&lsaquo;</span>';
+    h += '<span class="tx">' + esc(catAberta === "DOSES" ? "Doses" : catAberta) + '</span>';
+    h += '<span class="qt">' + res.length + '</span></button>';
+  }
+
+  if (!res.length){
+    h += '<div class="vazio"><strong>Nenhum produto com esse nome</strong>Confira a escrita ou apague a busca para ver as categorias.</div>';
+    elTela.innerHTML = h; ligarVoltar(); return;
+  }
+
+  var atual = null;
+  h += '<div class="corpo">';
+  res.forEach(function(it, i){
+    if (!catAberta && it.cat !== atual){
+      atual = it.cat;
+      h += '<div class="cab solto">' + esc(it.cat === "DOSES" ? "Doses" : it.cat) + '</div>';
+    }
+    h += '<div class="li">' + linhaItem(it, i) + '</div>';
+  });
+  h += '<p class="rod">' + res.length + (res.length === 1 ? " produto" : " produtos") + '</p>';
+  h += '</div>';
+  elTela.innerHTML = h;
+  ligarVoltar();
+}
+
+function ligarVoltar(){
+  var b = document.getElementById("voltar");
+  if (b) b.addEventListener("click", function(){ catAberta = null; itemAberto = null; render(); window.scrollTo(0,0); });
+}
+
+/* ============ área admin (geral) ============ */
+var modoDona = false;
+var adminCatAberta = null;   /* null = lista de categorias; senão, nome da categoria aberta */
+var doseRascunho = null;     /* rascunho das doses, mantido entre navegações dentro da mesma sessão admin */
+var manualRascunhos = {};    /* { catNome: [ {id, nome, variantes:[{rot,preco}], nova, apagada, ref} ] } — rascunho por categoria */
+var formNovoAberto = false;
+var formComVariante = false;
+
+function dosesAtuais(){
+  var c = CAT.filter(function(x){ return x.nome === "DOSES"; })[0];
+  return c ? c.itens : [];
+}
+
+function abrirDona(){
+  modoDona = true;
+  adminCatAberta = null;
+  doseRascunho = null;
+  manualRascunhos = {};
+  formNovoAberto = false;
+  sessaoAdmin = null;
+  document.body.classList.add("dona");
+  verLoginAdmin();
+  window.scrollTo(0, 0);
+}
+
+function verLoginAdmin(erro){
+  elTela.innerHTML =
+    '<div class="entrada-box" style="margin-top:22vh">' +
+    '<h1>Área admin</h1>' +
+    '<p>Digite a senha da administradora para editar preços.</p>' +
+    (erro ? '<p class="entrada-erro">' + esc(erro) + '</p>' : "") +
+    '<input type="password" id="senha-admin" aria-label="Senha da administradora" placeholder="Senha" autocomplete="current-password">' +
+    '<button id="entrar-admin">Entrar</button>' +
+    '<button class="entrada-cancelar" id="cancelar-admin">Cancelar</button>' +
+    '</div>';
+  var inp = document.getElementById("senha-admin");
+  var bt = document.getElementById("entrar-admin");
+  function tentar(){
+    var senha = inp.value;
+    if (!senha) { inp.focus(); return; }
+    bt.disabled = true; bt.textContent = "Entrando…";
+    loginComSenha(EMAIL_ADMIN, senha)
+      .then(function(s){ sessaoAdmin = s; verDona(); })
+      .catch(function(e){ verLoginAdmin(e.message); });
+  }
+  bt.addEventListener("click", tentar);
+  inp.addEventListener("keydown", function(e){ if (e.key === "Enter") tentar(); });
+  document.getElementById("cancelar-admin").addEventListener("click", function(){
+    modoDona = false; document.body.classList.remove("dona"); render();
+  });
+  inp.focus();
+}
+
+function fecharDona(){
+  var pendente = (doseRascunho && contarMudancasDoses() > 0) || algumRascunhoManualPendente();
+  if (pendente && !window.confirm("Você tem alterações que ainda não foram salvas no sistema. Sair mesmo assim?")) return;
+  modoDona = false; adminCatAberta = null; sessaoAdmin = null;
+  document.body.classList.remove("dona");
+  render(); window.scrollTo(0, 0);
+}
+
+function algumRascunhoManualPendente(){
+  for (var nome in manualRascunhos){
+    if (contarMudancasManual(nome) > 0) return true;
+  }
+  return false;
+}
+
+function construirRascunhoManual(nome){
+  return manuaisAtuais(nome).map(function(it){
+    return { nome: it.nome, id: it.id, ref: it,
+      variantes: it.vars.map(function(v){ return { rot: v.rot, preco: v.preco }; }),
+      nova: false, apagada: false };
+  });
+}
+
+function contarMudancasManual(nome){
+  var draft = manualRascunhos[nome];
+  if (!draft) return 0;
+  var n = 0;
+  draft.forEach(function(l){
+    if (l.apagada || l.nova) { n++; return; }
+    var mudou = false;
+    l.variantes.forEach(function(v, k){ if (l.ref.vars[k] && v.preco !== l.ref.vars[k].preco) mudou = true; });
+    if (mudou) n++;
+  });
+  return n;
+}
+
+function abrirCategoriaAdmin(nome){
+  adminCatAberta = nome;
+  formNovoAberto = false; formComVariante = false;
+  if (nome === "DOSES" && !doseRascunho){
+    doseRascunho = dosesAtuais().map(function(it){
+      return { nome: it.nome, id: it.id || null, ref: it, valores: it.vars.map(function(v){ return v.preco; }), nova: false, apagada: false };
+    });
+  }
+  if (nome !== "DOSES" && !manualRascunhos[nome]){
+    manualRascunhos[nome] = construirRascunhoManual(nome);
+  }
+  verDona();
+  window.scrollTo(0, 0);
+}
+
+function voltarListaAdmin(){
+  adminCatAberta = null;
+  verDona();
+  window.scrollTo(0, 0);
+}
+
+function contarMudancasDoses(){
+  if (!doseRascunho) return 0;
+  var n = 0;
+  doseRascunho.forEach(function(l){
+    if (l.apagada || l.nova) { n++; return; }
+    l.valores.forEach(function(v, k){ if (v !== l.ref.vars[k].preco) n++; });
+  });
+  return n;
+}
+
+/* ---- tela 1: lista de categorias (sem destaque de cor) ---- */
+function verDona(){
+  if (adminCatAberta === "DOSES") return verDonaDoses();
+  if (adminCatAberta) return verDonaCategoria(adminCatAberta);
+
+  var h = '<div class="dona-topo"><div class="l1"><h2>Área admin</h2>';
+  h += '<button class="sair" id="sair-dona">Sair</button></div>';
+  h += '<p>Escolha uma categoria para ver os produtos e adicionar itens que faltam no cardápio.</p></div>';
+  h += '<p class="teste"><b>Tudo aqui já é salvo de verdade no sistema.</b> Os itens do cardápio continuam vindo do OlaClick — para mudar algum deles, altere direto por lá.</p>';
+  h += '<div class="admin-lista">';
+  CAT.forEach(function(c){
+    var rotulo = c.nome === "DOSES" ? "Doses" : c.nome;
+    h += '<button class="admin-item" data-admcat="' + esc(c.nome) + '">';
+    h += '<span class="nm">' + esc(rotulo) + '</span>';
+    h += '<span class="ct">' + c.itens.length + '</span><span class="seta">&rsaquo;</span></button>';
+  });
+  h += '</div>';
+  elTela.innerHTML = h;
+
+  document.getElementById("sair-dona").addEventListener("click", fecharDona);
+  elTela.querySelectorAll("[data-admcat]").forEach(function(b){
+    b.addEventListener("click", function(){ abrirCategoriaAdmin(b.getAttribute("data-admcat")); });
+  });
+}
+
+/* ---- tela 2a: categoria comum — cardápio (leitura) + itens manuais (edição) ---- */
+function verDonaCategoria(nome){
+  var cat = CAT.filter(function(c){ return c.nome === nome; })[0];
+  var cardapio = cat ? cat.itens.filter(function(it){ return !it.manual; }) : [];
+  var draft = manualRascunhos[nome] || [];
+  var rotulo = nome === "DOSES" ? "Doses" : nome;
+  var visiveis = draft.filter(function(l){ return !l.apagada; });
+
+  var h = '<button class="voltar" id="voltar-admin"><span class="ch">&lsaquo;</span>';
+  h += '<span class="tx">' + esc(rotulo) + '</span><span class="qt">' + (cardapio.length + visiveis.length) + '</span></button>';
+
+  h += '<div class="admin-corpo">';
+  h += '<p class="secao-t">Itens do cardápio</p>';
+  h += '<p class="aviso-leve">Esses preços vêm do OlaClick. Para mudar algum, altere direto no cardápio — aqui é só consulta.</p>';
+  if (!cardapio.length){
+    h += '<p class="vazio-leve">Nenhum item do cardápio nesta categoria.</p>';
+  } else {
+    cardapio.forEach(function(it){
+      var base = precoBase(it), rot = rotuloLinha(it);
+      h += '<div class="ro"><span class="nm">' + esc(it.nome) + '</span>';
+      h += '<span class="pr"><span class="v">' + brl(base.preco) + '</span>';
+      if (rot) h += '<span class="rot">' + esc(rot) + '</span>';
+      h += '</span></div>';
+    });
+  }
+
+  h += '<p class="secao-t separa">Itens adicionados por você</p>';
+  if (!visiveis.length && !formNovoAberto){
+    h += '<p class="vazio-leve">Nenhum item adicionado ainda nesta categoria.</p>';
+  }
+  draft.forEach(function(m, i){
+    if (m.apagada) return;
+    h += '<div class="manual"><div class="cab-d"><span class="nome-d">' + esc(m.nome) + '</span>';
+    h += '<button class="apagar-d" data-remover="' + i + '" aria-label="Remover ' + esc(m.nome) + '">&times;</button></div>';
+    h += '<div class="' + (m.variantes.length > 1 ? "duas" : "uma") + '">';
+    m.variantes.forEach(function(v, k){
+      h += '<label>' + (v.rot ? '<span class="tit">' + esc(v.rot) + '</span>' : "") +
+           '<span class="moeda"><span class="cif">R$</span>' +
+           '<input type="text" inputmode="decimal" aria-label="' + esc(m.nome + (v.rot ? " — " + v.rot : "")) + '" data-mi="' + i + '" data-mk="' + k + '" value="' + v.preco.toFixed(2).replace(".", ",") + '"></span></label>';
+    });
+    h += '</div></div>';
+  });
+
+  h += formNovoAberto ? formularioNovoItem() : '<button class="nova" id="abrir-form-novo">+ Adicionar item</button>';
+  h += '</div>';
+  h += '<div class="salvar-barra"><span class="cnt" id="cnt-mud-manual"></span>';
+  h += '<button class="btn-desfazer" id="btn-desfazer-manual">Desfazer</button>';
+  h += '<button class="btn-salvar" id="btn-salvar-manual">Salvar</button></div>';
+
+  elTela.innerHTML = h;
+  document.getElementById("voltar-admin").addEventListener("click", function(){
+    if (contarMudancasManual(nome) > 0 && !window.confirm("Você tem alterações que ainda não foram salvas. Voltar mesmo assim?")) return;
+    voltarListaAdmin();
+  });
+
+  elTela.querySelectorAll("input[data-mi]").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var i = Number(inp.getAttribute("data-mi")), k = Number(inp.getAttribute("data-mk"));
+      var n = Number(inp.value.replace(/[^\d,.]/g, "").replace(",", "."));
+      if (!isNaN(n)) draft[i].variantes[k].preco = n;
+      atualizarBarraManual(nome);
+    });
+    inp.addEventListener("blur", function(){
+      var i = Number(inp.getAttribute("data-mi")), k = Number(inp.getAttribute("data-mk"));
+      inp.value = draft[i].variantes[k].preco.toFixed(2).replace(".", ",");
+    });
+  });
+  elTela.querySelectorAll("[data-remover]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var i = Number(b.getAttribute("data-remover"));
+      if (!window.confirm("Remover " + draft[i].nome + " desta categoria?")) return;
+      draft[i].apagada = true;
+      verDonaCategoria(nome);
+    });
+  });
+
+  var abrirBtn = document.getElementById("abrir-form-novo");
+  if (abrirBtn) abrirBtn.addEventListener("click", function(){
+    formNovoAberto = true; formComVariante = false;
+    verDonaCategoria(nome);
+    var el = document.getElementById("novo-nome"); if (el) el.focus();
+  });
+  ligarFormularioNovoItem(nome);
+
+  document.getElementById("btn-desfazer-manual").addEventListener("click", function(){
+    if (!window.confirm("Desfazer todas as alterações e voltar ao que está salvo?")) return;
+    manualRascunhos[nome] = construirRascunhoManual(nome);
+    verDonaCategoria(nome);
+  });
+  document.getElementById("btn-salvar-manual").addEventListener("click", function(){ salvarManualNoBanco(nome); });
+  atualizarBarraManual(nome);
+}
+
+function atualizarBarraManual(nome){
+  var n = contarMudancasManual(nome);
+  var cnt = document.getElementById("cnt-mud-manual");
+  var bt = document.getElementById("btn-salvar-manual");
+  var bd = document.getElementById("btn-desfazer-manual");
+  if (!cnt) return;
+  cnt.innerHTML = n === 0
+    ? "Nenhuma alteração ainda"
+    : "<b>" + n + (n === 1 ? " alteração" : " alterações") + "</b> pronta" + (n === 1 ? "" : "s") + " para salvar";
+  bt.disabled = n === 0;
+  bd.style.display = n === 0 ? "none" : "block";
+}
+
+function salvarManualNoBanco(nome){
+  var draft = manualRascunhos[nome] || [];
+  var btn = document.getElementById("btn-salvar-manual");
+  var bd = document.getElementById("btn-desfazer-manual");
+  btn.disabled = true; btn.textContent = "Salvando…";
+  if (bd) bd.disabled = true;
+
+  var novos = draft.filter(function(l){ return l.nova && !l.apagada; });
+  var apagados = draft.filter(function(l){ return l.apagada && !l.nova && l.id; });
+  var alterados = draft.filter(function(l){
+    if (l.nova || l.apagada || !l.id) return false;
+    var mudou = false;
+    l.variantes.forEach(function(v, k){ if (l.ref.vars[k] && v.preco !== l.ref.vars[k].preco) mudou = true; });
+    return mudou;
+  });
+
+  function corpoDe(l){
+    var corpo = { preco: l.variantes[0].preco };
+    if (l.variantes.length > 1){ corpo.variante_nome = l.variantes[1].rot; corpo.variante_preco = l.variantes[1].preco; }
+    else { corpo.variante_nome = null; corpo.variante_preco = null; }
+    return corpo;
+  }
+
+  var cabecalhoEscrita = { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo(),
+    "Content-Type": "application/json", Prefer: "return=representation" };
+  var tarefas = [];
+
+  novos.forEach(function(l){
+    var corpo = corpoDe(l);
+    corpo.categoria = nome; corpo.nome = l.nome;
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/itens_manuais", {
+      method: "POST", headers: cabecalhoEscrita, body: JSON.stringify(corpo)
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível adicionar \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+  apagados.forEach(function(l){
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/itens_manuais?id=eq." + l.id, {
+      method: "DELETE", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo(), Prefer: "return=representation" }
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível remover \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+  alterados.forEach(function(l){
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/itens_manuais?id=eq." + l.id, {
+      method: "PATCH", headers: cabecalhoEscrita, body: JSON.stringify(corpoDe(l))
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível atualizar \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+
+  Promise.allSettled(tarefas).then(function(resultados){
+    var falhas = resultados.filter(function(r){ return r.status === "rejected"; });
+    if (falhas.length){
+      window.alert("Algumas alterações não foram salvas:\n\n" +
+        falhas.map(function(f){ return "• " + f.reason.message; }).join("\n") +
+        "\n\nAs demais alterações foram salvas. Ajuste o que faltou e clique em Salvar de novo.");
+    } else if (tarefas.length) {
+      window.alert("Itens salvos! Os funcionários já vão ver essa atualização.");
+    }
+    manualRascunhos[nome] = null;
+    var p = sincronizarManuais(false);
+    (p && p.then ? p : Promise.resolve()).then(function(){
+      manualRascunhos[nome] = construirRascunhoManual(nome);
+      if (adminCatAberta === nome) verDonaCategoria(nome);
+    });
+  });
+}
+
+function formularioNovoItem(){
+  var h = '<div class="form-novo">';
+  h += '<label class="campo-form"><span class="tit">Nome do produto</span>';
+  h += '<input type="text" id="novo-nome" placeholder="Ex: Snickers" autocomplete="off"></label>';
+  h += '<label class="campo-form"><span class="tit">Preço</span><span class="moeda"><span class="cif">R$</span>';
+  h += '<input type="text" inputmode="decimal" id="novo-preco" placeholder="0,00"></span></label>';
+  h += '<label class="chk"><input type="checkbox" id="novo-flag"> Vende também em outra forma (ex: fardo, caixa)</label>';
+  h += '<div id="novo-extra" style="display:' + (formComVariante ? "block" : "none") + '">';
+  h += '<label class="campo-form"><span class="tit">Nome dessa outra forma</span>';
+  h += '<input type="text" id="novo-nome2" placeholder="Ex: Fardo com 12" autocomplete="off"></label>';
+  h += '<label class="campo-form"><span class="tit">Preço dessa forma</span><span class="moeda"><span class="cif">R$</span>';
+  h += '<input type="text" inputmode="decimal" id="novo-preco2" placeholder="0,00"></span></label>';
+  h += '</div>';
+  h += '<div class="form-botoes"><button class="btn-cancelar" id="cancelar-novo">Cancelar</button>';
+  h += '<button class="btn-add" id="confirmar-novo">Adicionar</button></div>';
+  h += '</div>';
+  return h;
+}
+
+function ligarFormularioNovoItem(nome){
+  var flag = document.getElementById("novo-flag");
+  if (flag) flag.addEventListener("change", function(){
+    formComVariante = flag.checked;
+    document.getElementById("novo-extra").style.display = formComVariante ? "block" : "none";
+  });
+  var cancelar = document.getElementById("cancelar-novo");
+  if (cancelar) cancelar.addEventListener("click", function(){
+    formNovoAberto = false; verDonaCategoria(nome);
+  });
+  var confirmar = document.getElementById("confirmar-novo");
+  if (confirmar) confirmar.addEventListener("click", function(){
+    var nomeEl = document.getElementById("novo-nome"), precoEl = document.getElementById("novo-preco");
+    var nomeProd = nomeEl.value.trim();
+    var preco = Number(precoEl.value.replace(/[^\d,.]/g, "").replace(",", "."));
+    if (!nomeProd){ nomeEl.focus(); return; }
+    if (!preco || preco <= 0){ precoEl.focus(); return; }
+    var variantes = [{ rot: "", preco: preco }];
+    if (formComVariante){
+      var n2 = document.getElementById("novo-nome2").value.trim();
+      var p2 = Number(document.getElementById("novo-preco2").value.replace(/[^\d,.]/g, "").replace(",", "."));
+      variantes[0].rot = "Unidade";
+      variantes.push({ rot: n2 || "Outra forma", preco: (p2 && p2 > 0) ? p2 : 0 });
+    }
+    if (!manualRascunhos[nome]) manualRascunhos[nome] = [];
+    manualRascunhos[nome].push({ nome: nomeProd.toUpperCase(), id: null, ref: { vars: [{preco:-1},{preco:-1}] },
+      variantes: variantes, nova: true, apagada: false });
+    formNovoAberto = false;
+    verDonaCategoria(nome);
+  });
+}
+
+/* ---- tela 2b: doses (mesma UI de antes, agora dentro da lista de categorias) ---- */
+function verDonaDoses(){
+  var h = '<button class="voltar" id="voltar-admin"><span class="ch">&lsaquo;</span>';
+  h += '<span class="tx">Doses</span><span class="qt">' + doseRascunho.filter(function(l){ return !l.apagada; }).length + '</span></button>';
+  h += '<p class="aviso-leve doses-aviso">Toque no valor para alterar. As doses não vêm do cardápio, por isso são mantidas aqui.</p>';
+  h += '<div class="dose-lista" id="dose-lista"></div>';
+  h += '<div class="salvar-barra"><span class="cnt" id="cnt-mud"></span>';
+  h += '<button class="btn-desfazer" id="btn-desfazer">Desfazer</button>';
+  h += '<button class="btn-salvar" id="btn-salvar">Salvar</button></div>';
+  elTela.innerHTML = h;
+  desenharDoses();
+
+  document.getElementById("voltar-admin").addEventListener("click", function(){
+    if (contarMudancasDoses() > 0 && !window.confirm("Você alterou preços que ainda não foram salvos. Voltar mesmo assim?")) return;
+    voltarListaAdmin();
+  });
+  document.getElementById("btn-desfazer").addEventListener("click", function(){
+    if (!window.confirm("Desfazer todas as alterações e voltar aos preços atuais?")) return;
+    doseRascunho = null;
+    abrirCategoriaAdmin("DOSES");
+  });
+  document.getElementById("btn-salvar").addEventListener("click", salvarDosesNoBanco);
+  atualizarBarraDoses();
+}
+
+function salvarDosesNoBanco(){
+  var btn = document.getElementById("btn-salvar");
+  var bd = document.getElementById("btn-desfazer");
+  btn.disabled = true; btn.textContent = "Salvando…";
+  if (bd) bd.disabled = true;
+
+  var novos = doseRascunho.filter(function(l){ return l.nova && !l.apagada; });
+  var apagados = doseRascunho.filter(function(l){ return l.apagada && !l.nova && l.id; });
+  var alterados = doseRascunho.filter(function(l){
+    if (l.nova || l.apagada || !l.id) return false;
+    return l.valores[0] !== l.ref.vars[0].preco || l.valores[1] !== l.ref.vars[1].preco || l.valores[2] !== l.ref.vars[2].preco;
+  });
+
+  var cabecalhoEscrita = { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo(),
+    "Content-Type": "application/json", Prefer: "return=representation" };
+  var tarefas = [];
+
+  novos.forEach(function(l){
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/doses", {
+      method: "POST", headers: cabecalhoEscrita,
+      body: JSON.stringify({ nome: l.nome, preco_red_bull: l.valores[0], preco_vibe_baly: l.valores[1], preco_pura: l.valores[2] })
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível adicionar \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+  apagados.forEach(function(l){
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/doses?id=eq." + l.id, {
+      method: "DELETE", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo(), Prefer: "return=representation" }
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível remover \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+  alterados.forEach(function(l){
+    tarefas.push(fetch(SUPABASE_URL + "/rest/v1/doses?id=eq." + l.id, {
+      method: "PATCH", headers: cabecalhoEscrita,
+      body: JSON.stringify({ preco_red_bull: l.valores[0], preco_vibe_baly: l.valores[1], preco_pura: l.valores[2] })
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok || !Array.isArray(d) || !d.length) throw new Error("Não foi possível atualizar \"" + l.nome + "\" (sem permissão para gravar)");
+    }); }));
+  });
+
+  Promise.allSettled(tarefas).then(function(resultados){
+    var falhas = resultados.filter(function(r){ return r.status === "rejected"; });
+    if (falhas.length){
+      window.alert("Algumas alterações não foram salvas:\n\n" +
+        falhas.map(function(f){ return "• " + f.reason.message; }).join("\n") +
+        "\n\nAs demais alterações foram salvas. Ajuste o que faltou e clique em Salvar de novo.");
+    } else if (tarefas.length) {
+      window.alert("Preços salvos! Os funcionários já vão ver os novos valores.");
+    }
+    doseRascunho = null;
+    var p = sincronizarDoses(false);
+    (p && p.then ? p : Promise.resolve()).then(function(){
+      if (adminCatAberta === "DOSES") abrirCategoriaAdmin("DOSES");
+    });
+  });
+}
+
+function atualizarBarraDoses(){
+  var n = contarMudancasDoses();
+  var cnt = document.getElementById("cnt-mud");
+  var bt = document.getElementById("btn-salvar");
+  var bd = document.getElementById("btn-desfazer");
+  if (!cnt) return;
+  cnt.innerHTML = n === 0
+    ? "Nenhuma alteração ainda"
+    : "<b>" + n + (n === 1 ? " alteração" : " alterações") + "</b> pronta" + (n === 1 ? "" : "s") + " para salvar";
+  bt.disabled = n === 0;
+  bd.style.display = n === 0 ? "none" : "block";
+}
+
+function desenharDoses(){
+  var lista = document.getElementById("dose-lista");
+  var h = "", rots = ["Com Red Bull", "Com Vibe/Baly", "Pura"];
+  doseRascunho.forEach(function(l, i){
+    if (l.apagada) return;
+    h += '<div class="dose"><div class="cab-d"><span class="nome-d">' + esc(l.nome) + '</span>';
+    h += '<button class="apagar-d" data-apagar="' + i + '" aria-label="Remover ' + esc(l.nome) + '">&times;</button></div>';
+    h += '<div class="tres">';
+    rots.forEach(function(r, k){
+      h += '<label><span class="tit">' + r + '</span><span class="moeda"><span class="cif">R$</span>';
+      h += '<input type="text" inputmode="decimal" aria-label="' + esc(l.nome + " — " + r) + '" data-l="' + i + '" data-k="' + k + '" value="' + l.valores[k].toFixed(2).replace(".", ",") + '"></span></label>';
+    });
+    h += '</div></div>';
+  });
+  h += '<button class="nova" id="nova-dose">+ Adicionar uma dose</button>';
+  lista.innerHTML = h;
+
+  lista.querySelectorAll("input[data-l]").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var i = Number(inp.getAttribute("data-l")), k = Number(inp.getAttribute("data-k"));
+      var n = Number(inp.value.replace(/[^\d,.]/g, "").replace(",", "."));
+      if (!isNaN(n)) doseRascunho[i].valores[k] = n;
+      inp.classList.toggle("mudou", doseRascunho[i].nova || n !== doseRascunho[i].ref.vars[k].preco);
+      atualizarBarraDoses();
+    });
+    inp.addEventListener("blur", function(){
+      var i = Number(inp.getAttribute("data-l")), k = Number(inp.getAttribute("data-k"));
+      inp.value = doseRascunho[i].valores[k].toFixed(2).replace(".", ",");
+    });
+  });
+  lista.querySelectorAll("[data-apagar]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var i = Number(b.getAttribute("data-apagar"));
+      if (!window.confirm("Remover " + doseRascunho[i].nome + " da lista de doses?")) return;
+      doseRascunho[i].apagada = true;
+      desenharDoses(); atualizarBarraDoses();
+    });
+  });
+  document.getElementById("nova-dose").addEventListener("click", function(){
+    var nome = window.prompt("Nome da bebida (ex: WHISKY JAMESON)");
+    if (!nome || !nome.trim()) return;
+    doseRascunho.push({ nome: nome.trim().toUpperCase(), nova: true, apagada: false, valores: [0, 0, 0],
+      ref: { vars: [{preco:-1},{preco:-1},{preco:-1}] } });
+    desenharDoses(); atualizarBarraDoses();
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+}
+
+var mqPC = window.matchMedia("(min-width:760px)");
+function ehPC(){ return mqPC.matches; }
+
+function render(){
+  if (modoDona) return;
+  if (ehPC()) verPC();
+  else if (!busca && !catAberta) verQuadro();
+  else verLista();
+}
+
+/* ---- layout de computador: menu fixo + lista ---- */
+function verPC(){
+  var h = '<div class="pc"><aside class="painel">';
+  h += '<p class="titulo">Mais consultados</p><div class="menu">';
+  var destaque = CAT.filter(function(c){ return c.nome === "DOSES" || c.nome.indexOf("COMBO ") === 0; });
+  var resto = CAT.filter(function(c){ return destaque.indexOf(c) < 0; });
+  function bt(c){
+    var doses = c.nome === "DOSES", combo = c.nome.indexOf("COMBO ") === 0;
+    var rotulo = doses ? "Doses" : (combo ? "Combo " + c.nome.slice(6).toLowerCase() : c.nome);
+    return '<button class="mi' + (doses ? " doses" : (combo ? " combo" : "")) +
+      (catAberta === c.nome ? " on" : "") + '" data-cat="' + esc(c.nome) + '">' +
+      '<span class="nm">' + esc(rotulo) + '</span><span class="ct">' + c.itens.length + '</span></button>';
+  }
+  destaque.forEach(function(c){ h += bt(c); });
+  h += '</div><p class="titulo separa">Todas as categorias</p><div class="menu">';
+  h += '<button class="mi' + (catAberta ? "" : " on") + '" data-cat="">' +
+       '<span class="nm">Ver tudo</span><span class="ct">' + TODOS.length + '</span></button>';
+  resto.forEach(function(c){ h += bt(c); });
+  h += '</div><button class="entrada" id="entrar-dona">Área admin</button></aside>';
+
+  h += '<div class="conteudo">' + montarLista() + '</div></div>';
+  elTela.innerHTML = h;
+}
+
+function montarLista(){
+  var res = filtrarProdutos();
+  if (!res.length)
+    return '<div class="vazio"><strong>Nenhum produto com esse nome</strong>Confira a escrita ou escolha outra categoria.</div>';
+
+  var h = '<div class="corpo">', atual = null;
+  res.forEach(function(it, i){
+    if (it.cat !== atual){
+      atual = it.cat;
+      h += '<div class="cab solto">' + esc(it.cat === "DOSES" ? "Doses" : it.cat) + '</div>';
+    }
+    h += '<div class="li">' + linhaItem(it, i) + '</div>';
+  });
+  h += '<p class="rod">' + res.length + (res.length === 1 ? " produto" : " produtos") + '</p></div>';
+  return h;
+}
+
+/* ============ eventos ============ */
+elBusca.addEventListener("input", function(){
+  busca = elBusca.value;
+  elLimpar.classList.toggle("on", !!busca);
+  itemAberto = null;
+  if (busca) catAberta = null;
+  render();
+});
+elLimpar.addEventListener("click", function(){
+  busca = ""; elBusca.value = ""; elLimpar.classList.remove("on");
+  itemAberto = null; render(); elBusca.focus();
+});
+document.addEventListener("click", function(e){
+  if (e.target.closest("#entrar-dona")){ abrirDona(); return; }
+  var t = e.target.closest("[data-cat]");
+  if (t){
+    var v = t.getAttribute("data-cat");
+    catAberta = v || null; itemAberto = null; render();
+    if (!ehPC()) window.scrollTo(0, 0);
+    else { var cc = document.querySelector(".conteudo"); if (cc) cc.scrollTop = 0; }
+    return;
+  }
+  var b = e.target.closest("[data-item]");
+  if (b && !b.disabled){
+    var id = b.getAttribute("data-item");
+    itemAberto = (itemAberto === id) ? null : id;
+    render();
+  }
+});
+var ultimoCliqueAtualizar = 0;
+/* dispara a função que visita o OlaClick de verdade agora mesmo, em vez de esperar
+   a próxima rodada automática (de hora em hora). Só é usada quando a pessoa aperta
+   "Atualizar" — a sincronização automática ao abrir o app continua só relendo o
+   banco, pra não ficar batendo no OlaClick toda hora sem necessidade. */
+function forcarBuscaNoOlaClick(){
+  return fetch(SUPABASE_URL + "/functions/v1/sync-cardapio", {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + tokenAtivo() }
+  }).catch(function(){ /* se falhar, segue com o que já estiver no banco */ });
+}
+
+elAtualizar.addEventListener("click", function(){
+  var agora = Date.now();
+  if (agora - ultimoCliqueAtualizar < 120000){
+    elQuando.innerHTML = "Espera um minuto e tenta de novo · " + statusDosesHTML();
+    return;
+  }
+  ultimoCliqueAtualizar = agora;
+  sincronizarDoses(true);
+  sincronizarManuais(true);
+  elAtualizar.disabled = true; elAtualizar.textContent = "Buscando…";
+  forcarBuscaNoOlaClick().finally(function(){ sincronizarCardapio(true); });
+});
+
+/* tenta usar a última cópia salva imediatamente (para abrir rápido mesmo offline),
+   e em seguida busca a versão mais nova no Supabase. */
+function iniciarApp(){
+  (function(){
+    var cache = carregarCacheDoses();
+    if (cache){
+      aplicarDoses(cache.dados);
+      doseFonte = "cache";
+      doseQuando = new Date(cache.quando);
+    }
+    var cacheM = carregarCacheManuais();
+    if (cacheM){
+      aplicarManuais(cacheM.dados);
+      manualFonte = "cache";
+      manualQuando = new Date(cacheM.quando);
+    }
+    var cacheC = carregarCacheCardapio();
+    if (cacheC){
+      aplicarCardapio(construirCatalogoDoCardapio(cacheC.dados));
+      cardapioFonte = "cache";
+      cardapioQuando = new Date(cacheC.quando);
+    }
+  })();
+
+  marcarHora();
+  render();
+  sincronizarDoses(false);
+  sincronizarManuais(false);
+  sincronizarCardapio(false);
+}
+mqPC.addEventListener("change", function(){ itemAberto = null; render(); ajustarAltura(); });
+
+/* ---- portão de entrada: pede a senha da equipe uma única vez por aparelho ---- */
+function verEntrada(erro){
+  document.body.classList.add("entrada-tela");
+  elTela.innerHTML =
+    '<div class="entrada-box">' +
+    '<img class="entrada-logo" width="64" height="64" src="' + document.querySelector(".selo").src + '" alt="">' +
+    '<h1>Adega Noruega</h1>' +
+    '<p>Digite a senha da equipe para consultar os preços.</p>' +
+    (erro ? '<p class="entrada-erro">' + esc(erro) + '</p>' : "") +
+    '<input type="password" id="senha-equipe" aria-label="Senha da equipe" placeholder="Senha" autocomplete="current-password">' +
+    '<button id="entrar-equipe">Entrar</button>' +
+    '</div>';
+  var inp = document.getElementById("senha-equipe");
+  var bt = document.getElementById("entrar-equipe");
+  function tentar(){
+    var senha = inp.value;
+    if (!senha) { inp.focus(); return; }
+    bt.disabled = true; bt.textContent = "Entrando…";
+    loginComSenha(EMAIL_EQUIPE, senha)
+      .then(function(s){
+        salvarSessaoEquipe(s);
+        document.body.classList.remove("entrada-tela");
+        iniciarApp();
+      })
+      .catch(function(e){ verEntrada(e.message); });
+  }
+  bt.addEventListener("click", tentar);
+  inp.addEventListener("keydown", function(e){ if (e.key === "Enter") tentar(); });
+  inp.focus();
+}
+
+/* ao carregar: tenta usar a sessão da equipe já salva; se não der, pede a senha */
+(function(){
+  var salva = carregarSessaoEquipeSalva();
+  if (!salva){ verEntrada(); return; }
+  sessaoEquipe = salva;
+  renovarSessaoEquipe(salva.refresh_token)
+    .then(function(s){ salvarSessaoEquipe(s); iniciarApp(); })
+    .catch(function(){ limparSessaoEquipe(); verEntrada(); });
+})();
+
+function ajustarAltura(){
+  var t = document.querySelector(".topo"), e = document.querySelector(".estado");
+  if (!t || !e) return;
+  var alto = t.offsetHeight + e.offsetHeight;
+  document.documentElement.style.setProperty("--alto-topo", alto + "px");
+}
+ajustarAltura();
+window.addEventListener("resize", ajustarAltura);
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){
+      /* se o sw.js nao estiver no mesmo lugar (ex: alguem so testando o index.html sozinho),
+         o app continua funcionando normalmente, só sem o modo instalavel completo */
+    });
+  });
+}
+</script>
 </body>
 </html>
